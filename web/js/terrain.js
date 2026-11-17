@@ -207,7 +207,7 @@ export function buildGrass(zones) {
     const h = heightAt(x, z);
     if (h < 0.85 || h > 3.9) continue;
     if (streamDistance(x, z) < 1.5) continue;
-    if (season?.snow && rand() < 0.45) continue; // snow flattens much of the grass
+    if (season?.snow && rand() < 0.85) continue; // snow flattens much of the grass
     if (!inMeadow && zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.5)) continue;
     if (pathSamples(zones).some((q, k) => k % 3 === 0 && Math.abs(x - q.x) < 0.9 && Math.abs(z - q.z) < 0.9)) continue;
     p.set(x, h - 0.02, z);
