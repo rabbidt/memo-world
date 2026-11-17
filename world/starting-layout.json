@@ -1,0 +1,693 @@
+{
+ "version": 1,
+ "scatterSeed": 20261117,
+ "places": [
+  {
+   "id": "board",
+   "name": "Notice Board",
+   "x": 0,
+   "z": 0,
+   "radius": 4.5,
+   "description": "A crooked wooden board at the crossing of the island paths. Ash pins wishes here, and gifts from the Keeper appear beside it.",
+   "gatherables": [
+    "pin",
+    "paper scrap"
+   ]
+  },
+  {
+   "id": "nook",
+   "name": "Den",
+   "x": -9,
+   "z": 9,
+   "radius": 5,
+   "description": "A snug den under a grassy mound with a round door. Home. The best place to nap.",
+   "gatherables": [
+    "moss tuft",
+    "soft lint",
+    "shed fur"
+   ]
+  },
+  {
+   "id": "garden",
+   "name": "Garden",
+   "x": 11,
+   "z": 9,
+   "radius": 6.5,
+   "description": "Little fenced plots of dark soil with sprouts, flowers and a watering can.",
+   "gatherables": [
+    "seed",
+    "petal",
+    "pebble",
+    "sprig"
+   ]
+  },
+  {
+   "id": "workshop",
+   "name": "Workshop",
+   "x": 15,
+   "z": -8,
+   "radius": 6,
+   "description": "An open-sided hut with a workbench, pegs of tools and a little chimney. Things get made here.",
+   "gatherables": [
+    "wood scrap",
+    "twine",
+    "bent nail",
+    "clay lump"
+   ]
+  },
+  {
+   "id": "library",
+   "name": "Little Library",
+   "x": -2,
+   "z": -17,
+   "radius": 5.5,
+   "description": "A tiny round tower of stone with shelves of weathered books, a warm lantern, and a little computer on a desk outside that can look things up in the wide world.",
+   "gatherables": [
+    "pressed leaf",
+    "paper scrap",
+    "ribbon"
+   ]
+  },
+  {
+   "id": "pond",
+   "name": "Pond",
+   "x": -16,
+   "z": -6,
+   "radius": 7,
+   "description": "Still green water ringed with reeds and lily pads. Dragonflies by day, fireflies at night.",
+   "gatherables": [
+    "reed",
+    "smooth stone",
+    "lily petal",
+    "dew drop"
+   ],
+   "lift": -1.15,
+   "liftRadius": 4.2
+  },
+  {
+   "id": "meadow",
+   "name": "Meadow",
+   "x": 4,
+   "z": 21,
+   "radius": 6.5,
+   "description": "Tall soft grass and clover that leans with the wind. Feathers drift down here sometimes.",
+   "gatherables": [
+    "feather",
+    "clover",
+    "dandelion fluff",
+    "grass blade"
+   ]
+  },
+  {
+   "id": "shore",
+   "name": "Shore",
+   "x": -24,
+   "z": 17,
+   "radius": 6,
+   "description": "A curve of pale sand where the sea leaves small treasures. A small striped beach hut stands at the top of the sand, its deck facing the waves.",
+   "gatherables": [
+    "shell",
+    "driftwood",
+    "sea glass",
+    "sand dollar",
+    "cork float"
+   ]
+  },
+  {
+   "id": "lookout",
+   "name": "Lookout Hill",
+   "x": 22,
+   "z": -21,
+   "radius": 5.5,
+   "description": "The highest point of the island. A little domed observatory stands on the summit beside an old stump to sit on, with the whole sea to look at. A spring rises here and runs off down the hill.",
+   "gatherables": [
+    "quartz chip",
+    "pine cone",
+    "lichen",
+    "star chart scrap"
+   ],
+   "lift": 3.4,
+   "liftRadius": 7.5
+  },
+  {
+   "id": "waterfall",
+   "name": "Waterfall",
+   "x": 16,
+   "z": -17,
+   "radius": 3.5,
+   "description": "A thin bright waterfall drops from the side of Lookout Hill into a mossy pool, and a stream runs away from it across the island.",
+   "gatherables": [
+    "wet pebble",
+    "fern frond",
+    "mist drop"
+   ],
+   "lift": -0.4,
+   "liftRadius": 2.2
+  },
+  {
+   "id": "bridge",
+   "name": "Bridge",
+   "x": -1,
+   "z": -9.5,
+   "radius": 3,
+   "description": "A little arched bridge of stone and timber carries the path over a clear, quick stream on its way from the waterfall to the pond.",
+   "gatherables": [
+    "smooth pebble",
+    "water mint",
+    "minnow scale"
+   ]
+  },
+  {
+   "id": "campfire",
+   "name": "Campfire Circle",
+   "x": 24,
+   "z": 3,
+   "radius": 4,
+   "description": "Three stump seats around a ring of stones with a small fire burning, and firewood stacked ready.",
+   "gatherables": [
+    "charcoal",
+    "warm stone",
+    "twig"
+   ]
+  }
+ ],
+ "things": [
+  {
+   "kind": "notice_board",
+   "name": "Notice Board",
+   "place": "board",
+   "x": 0,
+   "z": -1.2,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "lantern",
+   "place": "board",
+   "x": 2.6,
+   "z": 0.6,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "signpost",
+   "place": "board",
+   "x": -2.4,
+   "z": 1.4,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "board",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 4.4,
+    "from": 3.4993851502486306,
+    "to": 5.1993358416911075
+   }
+  },
+  {
+   "kind": "burrow",
+   "name": "Den",
+   "place": "nook",
+   "x": 0,
+   "z": -0.5,
+   "facing": 137.5,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "lantern",
+   "place": "nook",
+   "x": 2.6,
+   "z": 1.8,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "mushrooms",
+   "place": "nook",
+   "x": -2.8,
+   "z": 1.5,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "nook",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 4.9,
+    "from": 2.600540585471551,
+    "to": 5.3005649383067786
+   }
+  },
+  {
+   "kind": "garden_plot",
+   "place": "garden",
+   "x": -2.2,
+   "z": -1.6,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "crop": "sprout"
+   }
+  },
+  {
+   "kind": "garden_plot",
+   "place": "garden",
+   "x": 2.2,
+   "z": -1.6,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "crop": "flower"
+   }
+  },
+  {
+   "kind": "garden_plot",
+   "place": "garden",
+   "x": -2.2,
+   "z": 2,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "crop": "leafy"
+   }
+  },
+  {
+   "kind": "garden_plot",
+   "place": "garden",
+   "x": 2.2,
+   "z": 2,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "crop": "sprout"
+   }
+  },
+  {
+   "kind": "watering_can",
+   "place": "garden",
+   "x": 0,
+   "z": 0.2,
+   "facing": 40.1,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "lantern",
+   "place": "garden",
+   "x": 4.6,
+   "z": -3.2,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "garden",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 6.2,
+    "from": -0.6003932626860493,
+    "to": 2.900737216814575
+   }
+  },
+  {
+   "kind": "workshop_hut",
+   "name": "Workshop",
+   "place": "workshop",
+   "x": 0,
+   "z": -1,
+   "facing": -28.6,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "log_pile",
+   "place": "workshop",
+   "x": -3.2,
+   "z": 2.2,
+   "facing": 22.9,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "workshop",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 5.6,
+    "from": -2.399827721492203,
+    "to": 0.3996803987067014
+   }
+  },
+  {
+   "kind": "library_tower",
+   "name": "Little Library",
+   "place": "library",
+   "x": 0,
+   "z": -0.8,
+   "facing": 8.6,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "computer",
+   "name": "Ash's Computer",
+   "place": "library",
+   "x": -3,
+   "z": 1.2,
+   "facing": 51.6,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "bench",
+   "place": "library",
+   "x": 3,
+   "z": 1.6,
+   "facing": -51.6,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "library",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 5,
+    "from": 2.0001473227855016,
+    "to": 5.600761569649803
+   }
+  },
+  {
+   "kind": "pond",
+   "name": "Pond",
+   "place": "pond",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 4.6
+   }
+  },
+  {
+   "kind": "bench",
+   "place": "pond",
+   "x": 5.6,
+   "z": 1.5,
+   "facing": 80.2,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "pond",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 6.6,
+    "from": 3.600614246864302,
+    "to": 5.899212871740834
+   }
+  },
+  {
+   "kind": "flower_patch",
+   "place": "meadow",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "count": 26,
+    "spread": 5.5
+   }
+  },
+  {
+   "kind": "beach_hut",
+   "name": "Beach Hut",
+   "place": "shore",
+   "x": 2.5,
+   "z": -2.5,
+   "facing": -55,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "driftwood",
+   "place": "shore",
+   "x": 1.5,
+   "z": 0.5,
+   "facing": 45.8,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "shells",
+   "place": "shore",
+   "x": -1.2,
+   "z": -1.6,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "observatory",
+   "name": "Observatory",
+   "place": "lookout",
+   "x": -0.5,
+   "z": -0.8,
+   "facing": -135,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "stump",
+   "name": "Sitting Stump",
+   "place": "lookout",
+   "x": 2.6,
+   "z": 1.8,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "lantern",
+   "place": "lookout",
+   "x": -1.8,
+   "z": -1.2,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "wall",
+   "place": "lookout",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "radius": 4.6,
+    "from": -1.2007865253720986,
+    "to": 1.6004669240788003
+   }
+  },
+  {
+   "kind": "waterfall",
+   "name": "Waterfall",
+   "place": "waterfall",
+   "x": 1.2,
+   "z": -0.8,
+   "facing": -124,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "pond",
+   "place": "waterfall",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 0.4,
+   "params": {}
+  },
+  {
+   "kind": "bridge",
+   "name": "Bridge",
+   "place": "bridge",
+   "x": 0,
+   "z": 0,
+   "facing": 5,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "stream",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {
+    "from": "lookout",
+    "via": "waterfall, bridge",
+    "to": "pond",
+    "width": 1.2
+   }
+  },
+  {
+   "kind": "campfire",
+   "name": "Campfire",
+   "place": "campfire",
+   "x": 0,
+   "z": 0,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "stump",
+   "place": "campfire",
+   "x": 1.9,
+   "z": 1.1,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "stump",
+   "place": "campfire",
+   "x": -1.9,
+   "z": 1.1,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "stump",
+   "place": "campfire",
+   "x": 0,
+   "z": -2.2,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  },
+  {
+   "kind": "log_pile",
+   "place": "campfire",
+   "x": -2.8,
+   "z": -1.6,
+   "facing": 40,
+   "scale": 0.6,
+   "params": {}
+  },
+  {
+   "kind": "lantern",
+   "place": "campfire",
+   "x": 2.8,
+   "z": -1.8,
+   "facing": 0,
+   "scale": 1,
+   "params": {}
+  }
+ ],
+ "scatter": [
+  {
+   "kind": "tree",
+   "count": 65,
+   "clumpOf": 5,
+   "rMin": 7,
+   "rMax": 29,
+   "scaleMin": 0.7,
+   "scaleMax": 1.45
+  },
+  {
+   "kind": "pine",
+   "count": 24,
+   "clumpOf": 4,
+   "rMin": 7,
+   "rMax": 29,
+   "scaleMin": 0.7,
+   "scaleMax": 1.45
+  },
+  {
+   "kind": "tree",
+   "count": 14,
+   "rMin": 5,
+   "rMax": 30,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  },
+  {
+   "kind": "pine",
+   "count": 6,
+   "rMin": 10,
+   "rMax": 31,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  },
+  {
+   "kind": "rock",
+   "count": 22,
+   "rMin": 4,
+   "rMax": 33,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  },
+  {
+   "kind": "bush",
+   "count": 44,
+   "rMin": 4,
+   "rMax": 31,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  },
+  {
+   "kind": "flower_patch",
+   "count": 26,
+   "rMin": 4,
+   "rMax": 30,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  },
+  {
+   "kind": "mushrooms",
+   "count": 7,
+   "rMin": 6,
+   "rMax": 28,
+   "scaleMin": 0.75,
+   "scaleMax": 1.35
+  }
+ ],
+ "start": {
+  "place": "nook",
+  "x": 3.2,
+  "z": 2.8
+ }
+}

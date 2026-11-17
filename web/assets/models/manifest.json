@@ -1,0 +1,3022 @@
+{
+ "units": "metres",
+ "up": "+Y",
+ "front": "+Z",
+ "origin": "ground centre",
+ "textures": "shared, in _tex/ (referenced by the .gltf models)",
+ "models": [
+  {
+   "name": "memo_pup",
+   "file": "memo_pup.glb",
+   "bytes": 227320,
+   "triangles": 8802,
+   "size": [
+    0.52,
+    0.643,
+    0.475
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.0832,
+      0.39,
+      0.1615
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.0832,
+      0.39,
+      0.1615
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.0975,
+      0.2242,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.0975,
+      0.2242,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.1891,
+      0.1515,
+      -0.0
+     ],
+     "parent": "ArmR"
+    },
+    "FootL": {
+     "pivot": [
+      0.039,
+      0.091,
+      -0.0
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.039,
+      0.091,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      0.0195,
+      0.091,
+      -0.0585
+     ],
+     "parent": "Body"
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Ash the wolf, pup stage, 0.65 m to the ear tips. Blockout measured from the character sheet."
+  },
+  {
+   "name": "memo_young",
+   "file": "memo_young.glb",
+   "bytes": 227300,
+   "triangles": 8802,
+   "size": [
+    0.584,
+    0.722,
+    0.534
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.0934,
+      0.438,
+      0.1814
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.0934,
+      0.438,
+      0.1814
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.1095,
+      0.2519,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.1095,
+      0.2519,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.2124,
+      0.1702,
+      -0.0
+     ],
+     "parent": "ArmR"
+    },
+    "FootL": {
+     "pivot": [
+      0.0438,
+      0.1022,
+      -0.0
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0438,
+      0.1022,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      0.0219,
+      0.1022,
+      -0.0657
+     ],
+     "parent": "Body"
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Ash the wolf, young stage, 0.73 m to the ear tips. Blockout measured from the character sheet."
+  },
+  {
+   "name": "memo_growing_up",
+   "file": "memo_growing_up.glb",
+   "bytes": 227308,
+   "triangles": 8802,
+   "size": [
+    0.656,
+    0.811,
+    0.6
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.105,
+      0.492,
+      0.2037
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.105,
+      0.492,
+      0.2037
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.123,
+      0.2829,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.123,
+      0.2829,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.2386,
+      0.1912,
+      -0.0
+     ],
+     "parent": "ArmR"
+    },
+    "FootL": {
+     "pivot": [
+      0.0492,
+      0.1148,
+      -0.0
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0492,
+      0.1148,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      0.0246,
+      0.1148,
+      -0.0738
+     ],
+     "parent": "Body"
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Ash the wolf, growing_up stage, 0.82 m to the ear tips. Blockout measured from the character sheet."
+  },
+  {
+   "name": "memo_grown",
+   "file": "memo_grown.glb",
+   "bytes": 227296,
+   "triangles": 8802,
+   "size": [
+    0.72,
+    0.89,
+    0.658
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.1152,
+      0.54,
+      0.2236
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.1152,
+      0.54,
+      0.2236
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.135,
+      0.3105,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.135,
+      0.3105,
+      -0.0
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.2619,
+      0.2098,
+      -0.0
+     ],
+     "parent": "ArmR"
+    },
+    "FootL": {
+     "pivot": [
+      0.054,
+      0.126,
+      -0.0
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.054,
+      0.126,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      0.027,
+      0.126,
+      -0.081
+     ],
+     "parent": "Body"
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Ash the wolf, grown stage, 0.90 m to the ear tips. Blockout measured from the character sheet."
+  },
+  {
+   "name": "tree",
+   "file": "tree.gltf",
+   "bytes": 2245532,
+   "triangles": 24990,
+   "size": [
+    4.876,
+    5.915,
+    4.973
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Broad oak with a layered leaf-card canopy, about 5.5 m tall."
+  },
+  {
+   "name": "tree_lod1",
+   "file": "tree_lod1.gltf",
+   "bytes": 1253228,
+   "triangles": 14434,
+   "size": [
+    5.282,
+    6.052,
+    5.236
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      3.136,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Broad oak with a layered leaf-card canopy, about 5.5 m tall. Low-detail version for distance."
+  },
+  {
+   "name": "tree_tall",
+   "file": "tree_tall.gltf",
+   "bytes": 1772259,
+   "triangles": 19872,
+   "size": [
+    4.309,
+    7.296,
+    4.407
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Tall narrow elm, about 7 m."
+  },
+  {
+   "name": "tree_tall_lod1",
+   "file": "tree_tall_lod1.gltf",
+   "bytes": 1114241,
+   "triangles": 12872,
+   "size": [
+    4.747,
+    7.371,
+    4.86
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      4.34,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Tall narrow elm, about 7 m. Low-detail version for distance."
+  },
+  {
+   "name": "tree_wide",
+   "file": "tree_wide.gltf",
+   "bytes": 1962614,
+   "triangles": 21984,
+   "size": [
+    6.156,
+    5.507,
+    6.569
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Old spreading tree with a leaning trunk, about 5 m tall and 8 m across."
+  },
+  {
+   "name": "tree_wide_lod1",
+   "file": "tree_wide_lod1.gltf",
+   "bytes": 1134262,
+   "triangles": 13172,
+   "size": [
+    6.695,
+    5.722,
+    7.279
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      2.304,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Old spreading tree with a leaning trunk, about 5 m tall and 8 m across. Low-detail version for distance."
+  },
+  {
+   "name": "tree_blossom",
+   "file": "tree_blossom.gltf",
+   "bytes": 1645048,
+   "triangles": 18936,
+   "size": [
+    4.656,
+    4.917,
+    4.825
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Blossom tree: pink in spring, green in summer, red in autumn. About 4.3 m."
+  },
+  {
+   "name": "tree_blossom_lod1",
+   "file": "tree_blossom_lod1.gltf",
+   "bytes": 991940,
+   "triangles": 11832,
+   "size": [
+    4.864,
+    4.992,
+    4.966
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      2.352,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Blossom tree: pink in spring, green in summer, red in autumn. About 4.3 m. Low-detail version for distance."
+  },
+  {
+   "name": "tree_birch",
+   "file": "tree_birch.gltf",
+   "bytes": 1403725,
+   "triangles": 16160,
+   "size": [
+    3.907,
+    6.126,
+    3.809
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Slender birch with a pale banded trunk, about 6 m."
+  },
+  {
+   "name": "tree_birch_lod1",
+   "file": "tree_birch_lod1.gltf",
+   "bytes": 951767,
+   "triangles": 11352,
+   "size": [
+    4.174,
+    6.273,
+    4.179
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Base": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Undergrowth": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_spring": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_autumn": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      3.6,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_spring",
+    "Canopy_autumn",
+    "Canopy_winter"
+   ],
+   "note": "Slender birch with a pale banded trunk, about 6 m. Low-detail version for distance."
+  },
+  {
+   "name": "pine",
+   "file": "pine.gltf",
+   "bytes": 148932,
+   "triangles": 1552,
+   "size": [
+    5.749,
+    6.606,
+    5.43
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      1.2,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      1.2,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_winter"
+   ],
+   "note": "Layered spruce built from drooping bough cards, about 6 m."
+  },
+  {
+   "name": "pine_lod1",
+   "file": "pine_lod1.gltf",
+   "bytes": 119084,
+   "triangles": 1224,
+   "size": [
+    5.741,
+    6.606,
+    5.96
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      1.2,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      1.2,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_winter"
+   ],
+   "note": "Layered spruce built from drooping bough cards, about 6 m. Low-detail version for distance."
+  },
+  {
+   "name": "pine_tall",
+   "file": "pine_tall.gltf",
+   "bytes": 174796,
+   "triangles": 1836,
+   "size": [
+    5.024,
+    8.659,
+    4.9
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      1.64,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      1.64,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_winter"
+   ],
+   "note": "Tall slim blue-green fir, about 8 m."
+  },
+  {
+   "name": "pine_tall_lod1",
+   "file": "pine_tall_lod1.gltf",
+   "bytes": 132199,
+   "triangles": 1368,
+   "size": [
+    5.412,
+    8.659,
+    5.461
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_summer": {
+     "pivot": [
+      0.0,
+      1.64,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy_winter": {
+     "pivot": [
+      0.0,
+      1.64,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Canopy_winter"
+   ],
+   "note": "Tall slim blue-green fir, about 8 m. Low-detail version for distance."
+  },
+  {
+   "name": "bush",
+   "file": "bush.gltf",
+   "bytes": 221094,
+   "triangles": 3450,
+   "size": [
+    1.624,
+    1.172,
+    1.753
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Leafy flowering shrub, about 1.6 m across."
+  },
+  {
+   "name": "bush_lod1",
+   "file": "bush_lod1.gltf",
+   "bytes": 133201,
+   "triangles": 2030,
+   "size": [
+    1.878,
+    1.39,
+    2.027
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Leafy flowering shrub, about 1.6 m across. Low-detail version for distance."
+  },
+  {
+   "name": "bush_low",
+   "file": "bush_low.gltf",
+   "bytes": 158697,
+   "triangles": 1506,
+   "size": [
+    1.992,
+    0.932,
+    1.756
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Low spreading shrub, about 2.2 m across."
+  },
+  {
+   "name": "bush_low_lod1",
+   "file": "bush_low_lod1.gltf",
+   "bytes": 111303,
+   "triangles": 1002,
+   "size": [
+    2.256,
+    1.136,
+    2.001
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Low spreading shrub, about 2.2 m across. Low-detail version for distance."
+  },
+  {
+   "name": "bush_berry",
+   "file": "bush_berry.gltf",
+   "bytes": 289831,
+   "triangles": 3302,
+   "size": [
+    1.798,
+    1.656,
+    1.986
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Upright berry bush, about 1.3 m tall."
+  },
+  {
+   "name": "bush_berry_lod1",
+   "file": "bush_berry_lod1.gltf",
+   "bytes": 149053,
+   "triangles": 1670,
+   "size": [
+    1.963,
+    1.839,
+    2.266
+   ],
+   "nodes": {
+    "Stems": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Leaves_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Leaves_spring",
+    "Leaves_autumn",
+    "Leaves_winter"
+   ],
+   "note": "Upright berry bush, about 1.3 m tall. Low-detail version for distance."
+  },
+  {
+   "name": "library_tower",
+   "file": "library_tower.gltf",
+   "bytes": 1855124,
+   "triangles": 29082,
+   "size": [
+    4.447,
+    6.261,
+    4.685
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Tower": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -1.104,
+      1.6,
+      1.5464
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Round stone-and-timber library tower, 3.7 m across at the roof line, 6.2 m tall. Door faces front."
+  },
+  {
+   "name": "workshop_hut",
+   "file": "workshop_hut.gltf",
+   "bytes": 1880080,
+   "triangles": 28932,
+   "size": [
+    5.455,
+    4.04,
+    4.758
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Hut": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -1.2,
+      1.5,
+      1.6
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Open-fronted timber workshop, 4.4 x 3.6 m, 3.8 m tall, with bench, tools, anvil and lantern."
+  },
+  {
+   "name": "burrow",
+   "file": "burrow.gltf",
+   "bytes": 1613187,
+   "triangles": 22296,
+   "size": [
+    6.268,
+    3.5,
+    8.719
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Burrow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Turf": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      1.68,
+      1.1,
+      3.3
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Memo's den: a turf mound 5.2 m across and 2.2 m tall with a stone front, round door and chimney."
+  },
+  {
+   "name": "notice_board",
+   "file": "notice_board.gltf",
+   "bytes": 408643,
+   "triangles": 6984,
+   "size": [
+    2.957,
+    2.779,
+    1.599
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Board": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Notes": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      1.2,
+      1.4,
+      0.05
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Timber notice board with a tiled roof, 2.9 m wide and 2.5 m tall, with pinned notes."
+  },
+  {
+   "name": "pond",
+   "file": "pond.gltf",
+   "bytes": 1654808,
+   "triangles": 22408,
+   "size": [
+    11.826,
+    2.219,
+    11.795
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Water": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Pond": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.72,
+      0.8,
+      3.258
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Pond with a 4.6 m water radius, stone bank, lily pads, reeds and a small jetty. Water is its own node."
+  },
+  {
+   "name": "garden_plot",
+   "file": "garden_plot.gltf",
+   "bytes": 686613,
+   "triangles": 11132,
+   "size": [
+    3.76,
+    1.814,
+    3.226
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Plot": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Crops_spring": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Crops_summer": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Crops_autumn": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Crops_winter": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Crops_spring",
+    "Crops_autumn",
+    "Crops_winter"
+   ],
+   "note": "Raised garden bed, 2.8 x 2.2 m, stone border. Crops_spring / _summer / _autumn / _winter are swappable child nodes."
+  },
+  {
+   "name": "computer",
+   "file": "computer.glb",
+   "bytes": 86072,
+   "triangles": 2824,
+   "size": [
+    1.5,
+    1.285,
+    1.35
+   ],
+   "nodes": {
+    "Desk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Screen": {
+     "pivot": [
+      -0.1,
+      1.08,
+      0.155
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.6,
+      0.95,
+      -0.22
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Memo's computer desk, 1.5 x 0.8 m. The Screen node glows and can be swapped or animated."
+  },
+  {
+   "name": "lantern",
+   "file": "lantern.gltf",
+   "bytes": 130584,
+   "triangles": 1700,
+   "size": [
+    0.841,
+    2.379,
+    0.607
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Lantern": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.38,
+      1.6,
+      0
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Lantern post, 2.3 m tall. The Light empty marks where a point light goes."
+  },
+  {
+   "name": "bench",
+   "file": "bench.gltf",
+   "bytes": 56487,
+   "triangles": 1060,
+   "size": [
+    1.5,
+    0.943,
+    0.6
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Bench": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Timber bench on stone feet, 1.5 m wide."
+  },
+  {
+   "name": "stump",
+   "file": "stump.glb",
+   "bytes": 41456,
+   "triangles": 908,
+   "size": [
+    1.188,
+    0.617,
+    1.188
+   ],
+   "nodes": {
+    "Stump": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Tree stump seat with roots and a mushroom."
+  },
+  {
+   "name": "signpost",
+   "file": "signpost.gltf",
+   "bytes": 126628,
+   "triangles": 1528,
+   "size": [
+    1.41,
+    1.881,
+    0.637
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Signpost": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Signpost with two arrow boards on a stone base, 1.9 m tall."
+  },
+  {
+   "name": "rock",
+   "file": "rock.gltf",
+   "bytes": 132070,
+   "triangles": 1506,
+   "size": [
+    1.722,
+    0.871,
+    1.241
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Rock": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Faceted mossy boulder with two smaller stones, about 1.6 m across."
+  },
+  {
+   "name": "rock_tall",
+   "file": "rock_tall.gltf",
+   "bytes": 126356,
+   "triangles": 1400,
+   "size": [
+    1.425,
+    1.11,
+    0.849
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Rock": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Standing stone with companions, about 1.7 m tall."
+  },
+  {
+   "name": "rock_flat",
+   "file": "rock_flat.gltf",
+   "bytes": 172103,
+   "triangles": 1910,
+   "size": [
+    2.246,
+    0.507,
+    1.711
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Rock": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Low slab outcrop, about 2 m across."
+  },
+  {
+   "name": "well",
+   "file": "well.gltf",
+   "bytes": 800308,
+   "triangles": 10160,
+   "size": [
+    2.059,
+    2.88,
+    1.971
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Well": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Stone well with a tiled roof and bucket, 2.6 m tall."
+  },
+  {
+   "name": "path_stones",
+   "file": "path_stones.gltf",
+   "bytes": 165389,
+   "triangles": 1860,
+   "size": [
+    1.569,
+    0.254,
+    2.977
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Path": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Cobbled path piece, about 2.6 x 1.3 m, running front to back. Tile along a route."
+  },
+  {
+   "name": "fence",
+   "file": "fence.glb",
+   "bytes": 47340,
+   "triangles": 924,
+   "size": [
+    2.54,
+    0.983,
+    0.392
+   ],
+   "nodes": {
+    "Fence": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Rustic timber fence segment, 2.4 m long, 0.9 m tall."
+  },
+  {
+   "name": "grass_tuft",
+   "file": "grass_tuft.glb",
+   "bytes": 10136,
+   "triangles": 216,
+   "size": [
+    0.267,
+    0.46,
+    0.313
+   ],
+   "nodes": {
+    "Grass": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Tufty grass clump, 0.45 m tall. Scatter many."
+  },
+  {
+   "name": "mushrooms",
+   "file": "mushrooms.glb",
+   "bytes": 31224,
+   "triangles": 676,
+   "size": [
+    0.72,
+    0.49,
+    0.516
+   ],
+   "nodes": {
+    "Mushrooms": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Three red-capped mushrooms."
+  },
+  {
+   "name": "crate",
+   "file": "crate.glb",
+   "bytes": 15604,
+   "triangles": 572,
+   "size": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "nodes": {
+    "Crate": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Wooden crate, 0.6 m."
+  },
+  {
+   "name": "barrel",
+   "file": "barrel.glb",
+   "bytes": 18988,
+   "triangles": 476,
+   "size": [
+    0.67,
+    0.8,
+    0.653
+   ],
+   "nodes": {
+    "Barrel": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Barrel, 0.8 m tall."
+  },
+  {
+   "name": "lookout",
+   "file": "lookout.gltf",
+   "bytes": 457155,
+   "triangles": 5896,
+   "size": [
+    4.783,
+    3.037,
+    4.574
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Lookout": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Pennant": {
+     "pivot": [
+      1.1,
+      2.75,
+      -0.6
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Lookout set for the hilltop: telescope on a tripod, pennant pole and a ring of stones. Pennant is its own node."
+  },
+  {
+   "name": "flower_cluster",
+   "file": "flower_cluster.glb",
+   "bytes": 81192,
+   "triangles": 1584,
+   "size": [
+    0.726,
+    0.411,
+    0.58
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  },
+  {
+   "name": "flower_cluster_gold",
+   "file": "flower_cluster_gold.glb",
+   "bytes": 82296,
+   "triangles": 1584,
+   "size": [
+    0.687,
+    0.445,
+    0.567
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  },
+  {
+   "name": "flower_cluster_blue",
+   "file": "flower_cluster_blue.glb",
+   "bytes": 79868,
+   "triangles": 1584,
+   "size": [
+    0.682,
+    0.426,
+    0.841
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": false,
+   "optional_nodes": [],
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  },
+  {
+   "name": "bridge",
+   "file": "bridge.gltf",
+   "bytes": 2331813,
+   "triangles": 29716,
+   "size": [
+    2.874,
+    2.1,
+    6.009
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Bridge": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.7,
+      1.5,
+      2.75
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Humpback stone footbridge, 5.4 m long and 2.2 m wide, walked along Z; the stream passes under along X."
+  },
+  {
+   "name": "beach_hut",
+   "file": "beach_hut.glb",
+   "bytes": 418520,
+   "triangles": 11944,
+   "size": [
+    4.339,
+    4.06,
+    4.401
+   ],
+   "nodes": {
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Hut": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -0.85,
+      2.25,
+      1.3
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": false,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Striped beach hut on stilts with a porch, 3.4 x 3.6 m footprint, 3.8 m tall. Door faces front."
+  },
+  {
+   "name": "waterfall",
+   "file": "waterfall.gltf",
+   "bytes": 1508254,
+   "triangles": 16305,
+   "size": [
+    5.929,
+    4.729,
+    6.566
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Rocks": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Water": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Foam": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Greenery": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Rocky cascade 4.3 m tall and 6 m wide falling into a pool at the front. Water and Foam are separate nodes with flow UVs."
+  },
+  {
+   "name": "campfire",
+   "file": "campfire.gltf",
+   "bytes": 405111,
+   "triangles": 7126,
+   "size": [
+    6.244,
+    1.156,
+    5.757
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Camp": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Flame": {
+     "pivot": [
+      0.0,
+      0.3,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0,
+      0.7,
+      0
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Campfire circle 5 m across: stone fire pit, stacked logs, four log seats. Flame is its own node; Light marks the fire."
+  },
+  {
+   "name": "observatory",
+   "file": "observatory.gltf",
+   "bytes": 3004232,
+   "triangles": 39380,
+   "size": [
+    5.377,
+    5.975,
+    5.75
+   ],
+   "nodes": {
+    "Stones": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Snow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Observatory": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Dome": {
+     "pivot": [
+      0.0,
+      3.74,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -1.1986,
+      1.65,
+      2.194
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "textured": true,
+   "optional_nodes": [
+    "Snow"
+   ],
+   "note": "Hilltop observatory, 5 m across and 6.6 m tall: stone base, timber-framed drum, turning copper Dome node with a telescope."
+  },
+  {
+   "name": "stone_wall",
+   "file": "stone_wall.gltf",
+   "bytes": 648464,
+   "triangles": 7272,
+   "size": [
+    4.082,
+    0.848,
+    1.671
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Greenery": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Curving dry-stone wall: an 80 degree arc of radius 3 m centred on the origin, 0.8 m tall. Four copies ring a yard."
+  },
+  {
+   "name": "stone_wall_lod1",
+   "file": "stone_wall_lod1.gltf",
+   "bytes": 160844,
+   "triangles": 1716,
+   "size": [
+    4.075,
+    0.837,
+    1.104
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Curving dry-stone wall: an 80 degree arc of radius 3 m centred on the origin, 0.8 m tall. Four copies ring a yard. Low-detail version for distance."
+  },
+  {
+   "name": "stone_wall_straight",
+   "file": "stone_wall_straight.gltf",
+   "bytes": 595828,
+   "triangles": 6702,
+   "size": [
+    4.212,
+    0.851,
+    0.999
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Greenery": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Straight dry-stone wall, 4 m long along X, 0.8 m tall."
+  },
+  {
+   "name": "stone_wall_straight_lod1",
+   "file": "stone_wall_straight_lod1.gltf",
+   "bytes": 147330,
+   "triangles": 1572,
+   "size": [
+    3.995,
+    0.818,
+    0.555
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Straight dry-stone wall, 4 m long along X, 0.8 m tall. Low-detail version for distance."
+  },
+  {
+   "name": "stone_wall_long",
+   "file": "stone_wall_long.gltf",
+   "bytes": 1144544,
+   "triangles": 13012,
+   "size": [
+    7.364,
+    0.818,
+    2.293
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Greenery": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Winding dry-stone wall, 7 m long, 0.8 m tall."
+  },
+  {
+   "name": "stone_wall_long_lod1",
+   "file": "stone_wall_long_lod1.gltf",
+   "bytes": 282063,
+   "triangles": 3036,
+   "size": [
+    7.06,
+    0.8,
+    1.92
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Core": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "textured": true,
+   "optional_nodes": [],
+   "note": "Winding dry-stone wall, 7 m long, 0.8 m tall. Low-detail version for distance."
+  }
+ ]
+}
