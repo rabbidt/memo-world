@@ -23,7 +23,7 @@ os.makedirs(out, exist_ok=True)
 
 # stage: total height (ear tips), head scale, leg length scale
 STAGES = {
-    'childlike': (0.65, 1.07, 0.86),
+    'pup': (0.65, 1.07, 0.86),
     'young': (0.73, 1.04, 0.95),
     'growing_up': (0.82, 1.00, 1.05),
     'grown': (0.90, 0.96, 1.15),

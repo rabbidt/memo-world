@@ -5,8 +5,8 @@
  "origin": "ground centre",
  "models": [
   {
-   "name": "memo_childlike",
-   "file": "memo_childlike.glb",
+   "name": "memo_pup",
+   "file": "memo_pup.glb",
    "bytes": 549340,
    "triangles": 28620,
    "size": [
@@ -88,7 +88,7 @@
      "parent": "ArmR"
     }
    },
-   "note": "Memo the wolf, childlike stage, 0.65 m to the ear tips. From Rob's wolf3 model."
+   "note": "Memo the wolf, pup stage, 0.65 m to the ear tips. From Rob's wolf3 model."
   },
   {
    "name": "memo_young",
