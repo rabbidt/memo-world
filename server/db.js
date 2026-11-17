@@ -92,6 +92,12 @@ CREATE TABLE IF NOT EXISTS book_notes (
   id INTEGER PRIMARY KEY AUTOINCREMENT, book_id INTEGER NOT NULL, ts TEXT NOT NULL, position INTEGER NOT NULL,
   note TEXT NOT NULL, english TEXT
 );
+-- Places beyond the island. Ash wishes to travel; the Keeper answers by promising an area, and it
+-- becomes 'open' once it has been built. Nothing here is drawn yet: this is the hook for growing the world.
+CREATE TABLE IF NOT EXISTS areas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, status TEXT NOT NULL DEFAULT 'promised',
+  wish_id INTEGER, created_at TEXT NOT NULL, opened_at TEXT
+);
 -- Shareable visitor links. The Keeper can revoke any of them.
 CREATE TABLE IF NOT EXISTS invites (
   token TEXT PRIMARY KEY, label TEXT NOT NULL, created_at TEXT NOT NULL, revoked INTEGER NOT NULL DEFAULT 0
@@ -107,6 +113,8 @@ CREATE TABLE IF NOT EXISTS messages (
   seen INTEGER NOT NULL DEFAULT 0
 );
 `);
+// Columns added after the first version.
+if (!db.prepare('PRAGMA table_info(wishes)').all().some((c) => c.name === 'kind')) db.exec('ALTER TABLE wishes ADD COLUMN kind TEXT'); // 'travel' for a wish to go somewhere new
 
 export const all = (sql, ...p) => db.prepare(sql).all(...p);
 export const get = (sql, ...p) => db.prepare(sql).get(...p);
