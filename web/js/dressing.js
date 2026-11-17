@@ -42,6 +42,26 @@ export function addLamp(group, model, power = 1) {
   lamps.push({ bulb: { material: {} }, light, power });
 }
 
+// Models can carry their own seasons: nodes named Canopy_spring, Leaves_autumn, Crops_winter and so on,
+// plus Snow. Hidden ones are exported at a tiny scale; the one for today's season is shown at full size.
+const SEASON_NODE = /^(Canopy|Leaves|Crops)_(spring|summer|autumn|winter)/;
+export function applySeasonNodes(root, S) {
+  const groups = new Map();
+  root.traverse((n) => {
+    const m = SEASON_NODE.exec(n.name);
+    if (m) { if (!groups.has(m[1])) groups.set(m[1], {}); groups.get(m[1])[m[2]] = n; }
+    else if (/^Snow/.test(n.name)) n.scale.setScalar(S?.snow ? 1 : 0.001);
+  });
+  for (const set of groups.values()) {
+    if (Object.keys(set).length < 2) continue;
+    // late autumn and early spring trees are nearer to winter than to their own season
+    const want = S ? (S.bare > 0.6 ? 'winter' : S.name) : 'summer';
+    const pick = set[want] || set.summer || Object.values(set)[0];
+    for (const n of Object.values(set)) n.scale.setScalar(n === pick ? 1 : 0.001);
+    root.userData.ownSeasons = true;
+  }
+}
+
 // What the time of year does to each scattered thing: a tint (multiplied into its own colour) or nothing at all.
 const hash = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
 function seasonal(name, canopy, it, S, tint) {
@@ -74,13 +94,14 @@ export function buildDressing(items, models, S = null) {
     const lightAt = model.getObjectByName('Light')?.getWorldPosition(new THREE.Vector3());
     model.traverse((n) => {
       if (!n.isMesh) return;
+      for (let a = n; a; a = a.parent) if (Math.abs(a.scale.x) < 0.01) return; // a part put away for another season
       let canopy = false; for (let a = n; a; a = a.parent) if (a.name.startsWith('Canopy')) canopy = true;
       const pivot = name === 'tree' || name === 'pine' ? (canopy ? -1.5 : 99) : 0; // canopy vertices are measured from the canopy's own pivot
       const mat = SWAY[name] && pivot < 50 ? swaying(n.material, SWAY[name], pivot) : n.material;
       const inst = new THREE.InstancedMesh(n.geometry, mat, list.length), tint = new THREE.Color();
       let i = 0;
       list.forEach((it) => {
-        if (!seasonal(name, canopy, it, S, tint)) return;
+        if (!seasonal(name, canopy, it, model.userData.ownSeasons ? null : S, tint)) return;
         const y = it.y ?? heightAt(it.x, it.z) - (name === 'path_stones' ? 0.05 : 0.03);
         T.compose(p.set(it.x, y, it.z), q.setFromAxisAngle(up, it.rotY || 0), s.setScalar(it.scale || 1));
         inst.setMatrixAt(i, M.multiplyMatrices(T, n.matrixWorld)); inst.setColorAt(i, tint); i++;

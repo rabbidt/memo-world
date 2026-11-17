@@ -2,6 +2,7 @@
 // Claude. It costs nothing and lets you see the island working before you add a key.
 import { get } from './db.js';
 import { getMemo, getZones, featureZone } from './world.js';
+import { isDark, isDusk } from './seasons.js';
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const P = (shape, size, position, color, material = 'matte', rotation = [0, 0, 0]) => ({ shape, size, position, rotation, color, material });
@@ -65,6 +66,8 @@ export async function demoTick(actions) {
   if (memo.energy < 20) { if (home && memo.zone !== home) actions.move_to({ zone: home }); actions.nap({ minutes: 40 }); }
   else if (gifts && board) { if (memo.zone !== board) actions.move_to({ zone: board }); await actions.open_gift({ gift_id: 0 }); }
   else if (ready) { if (memo.zone !== project.zone_id) actions.move_to({ zone: project.zone_id }); actions.build({}); }
+  else if (isDark() && featureZone('observatory') && roll < 0.22) { const z = featureZone('observatory'); if (memo.zone !== z) actions.move_to({ zone: z }); actions.stargaze({ looking_for: 'the brightest star' }); }
+  else if (isDusk() && featureZone('campfire') && roll < 0.4) { const z = featureZone('campfire'); if (memo.zone !== z) actions.move_to({ zone: z }); actions.sit_by_fire({}); }
   else if (roll < 0.3 && zones.length > 1) actions.move_to({ zone: pick(zones.filter((z) => z.id !== memo.zone)).id });
   else if (roll < 0.6) actions.gather({});
   else if (roll < 0.7) actions.observe({ target: 'the ground nearby' });

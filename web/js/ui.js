@@ -1,3 +1,4 @@
+import { sunTimes, moon, season, clockTime } from './almanac.js';
 import { api, key } from './api.js';
 import { marked } from '/vendor/marked.js';
 import DOMPurify from '/vendor/purify.js';
@@ -37,7 +38,7 @@ const FEEL = (v) => (v < 25 ? 'not at all' : v < 50 ? 'a little' : v < 75 ? 'qui
 export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) {
   const me = await api('me');
   const isOwner = me.role === 'owner';
-  const S = { island: data.island, memo: data.memo, inventory: data.inventory, project: data.project, programs: data.programs, parcels: data.parcels,
+  const S = { island: data.island, areas: data.areas || [], memo: data.memo, inventory: data.inventory, project: data.project, programs: data.programs, parcels: data.parcels,
     budget: data.budget, status: data.status, wishes: [], journal: [], events: [], mind: [], messages: [], audit: [], invites: [], documents: [], books: { books: [], notes: [] }, apps: [], tab: 'now', unread: new Set() };
 
   const TABS = [['now', 'Now'], ['journal', 'Journal'], ['wishes', 'Wishes'], ['mind', 'Mind'], ['town', 'Town'], ['library', 'Library'],
@@ -61,6 +62,7 @@ export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) 
           h('div', {}, h('h2', {}, 'Ash'), h('div', { class: 'muted' }, `${sleeping || ACTIVITY[m.activity] || m.activity} · ${zoneName(m.zone)}`),
             h('div', { class: 'chips', style: 'margin-top:5px' }, h('span', { class: 'chip' }, m.stage), h('span', { class: 'chip' }, `feeling ${m.mood}`)))),
         h('div', { class: 'thought' }, said(m.thought, m.thoughtEnglish)),
+        skyChips(),
         h('h3', {}, 'How he feels'),
         h('div', { class: 'bars' },
           ...[['Energy', m.energy, '', `${m.energy}`], ['Lonely', n.loneliness, 'rose', FEEL(n.loneliness)], ['Curious', n.curiosity, 'blue', FEEL(n.curiosity)], ['Wants to make', n.urge, 'warm', FEEL(n.urge)], ['Grown up', Math.round(m.maturity * 100), '', m.stage]]
@@ -103,6 +105,9 @@ export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) 
         p ? h('div', { class: 'entry' }, h('h4', {}, p.name), h('div', { class: 'small muted' }, `At the ${zoneName(p.zone_id)}`),
           h('div', { class: 'chips', style: 'margin-top:8px' }, p.supplies.map((s) => h('span', { class: 'chip' }, `${s.name} ${s.have}/${s.qty}`))),
           h('div', { class: 'small muted', style: 'margin-top:6px' }, 'Send supplies from the Wishes tab.')) : h('div', { class: 'muted' }, 'Nothing staked out. Ash plans big builds when he feels like it.'),
+        h('h3', {}, 'Beyond the island'),
+        S.areas.length ? S.areas.map((a) => h('div', { class: 'item' }, h('div', {}, h('strong', {}, a.name), h('div', { class: 'small muted' }, `${a.status === 'open' ? 'Open to Ash' : 'Promised, not built yet'}${a.description ? ` · ${a.description}` : ''}`))))
+          : h('div', { class: 'muted' }, 'Nowhere yet. New places open when Ash wishes to travel and you agree.'),
         h('h3', {}, 'Programs he invented'),
         S.programs.length ? S.programs.map((g) => h('div', { class: 'item' }, h('div', {}, h('strong', {}, g.name), h('div', { class: 'small muted' }, `${g.kind} · used ${g.plays} times`), h('div', { class: 'small' }, g.english || g.description)),
           h('button', { class: 'primary', onclick: () => openProgram(g) }, g.kind === 'game' ? 'Play' : 'Open'))) : h('div', { class: 'muted' }, 'None yet.'),
@@ -174,6 +179,12 @@ export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) 
     },
   };
 
+  // The real sky over London today, which is also the island's sky.
+  function skyChips() {
+    const d = new Date(), t = sunTimes(d), s = season(d);
+    return h('div', { class: 'chips', style: 'margin-top:8px' }, [s.label, `sunrise ${clockTime(t.sunrise)}`, `sunset ${clockTime(t.sunset)}`, moon(d).name, s.snow ? 'snow today' : null]
+      .filter(Boolean).map((x) => h('span', { class: 'chip' }, x)));
+  }
   function wishCard(w) {
     const supply = Boolean(w.project_id);
     if (w.kind === 'travel') return h('div', { class: 'note' }, said(w.text, w.english), w.reason ? h('div', { class: 'small muted', style: 'margin:4px 0 8px' }, w.reason) : null, isOwner ? travelForm(w) : h('div', { class: 'small muted' }, 'A wish to travel. Only the Keeper can answer it.'));
@@ -229,7 +240,7 @@ export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) 
 
   // ----- data -----
   const loaders = {
-    world: async () => { const d = await api('world'); Object.assign(S, { memo: d.memo, inventory: d.inventory, project: d.project, programs: d.programs, parcels: d.parcels, budget: d.budget, status: d.status, island: d.island }); title(); refreshBoard(S.wishes, S.parcels); },
+    world: async () => { const d = await api('world'); Object.assign(S, { memo: d.memo, inventory: d.inventory, project: d.project, programs: d.programs, parcels: d.parcels, budget: d.budget, status: d.status, island: d.island, areas: d.areas || [] }); title(); refreshBoard(S.wishes, S.parcels); },
     wishes: async () => { S.wishes = await api('wishes'); refreshBoard(S.wishes, S.parcels); },
     journal: async () => { S.journal = await api('journal'); },
     events: async () => { S.events = await api('events'); },

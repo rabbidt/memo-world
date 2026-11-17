@@ -66,6 +66,7 @@ function lamp(group, pos, color = '#ffd28a', power = 1) {
   lamps.push({ bulb, light, power });
   return bulb;
 }
+export const fires = []; // flames, lit only from dusk
 export const glows = []; // window-like surfaces that warm up at night
 function glowPane(group, geo, size, pos, rot) {
   const m = new THREE.Mesh(G[geo], new THREE.MeshStandardMaterial({ color: '#f3e3b0', emissive: '#ffcf70', emissiveIntensity: 0, roughness: 0.4 }));
@@ -274,8 +275,7 @@ export const builders = {
     const g = new THREE.Group();
     for (let i = 0; i < 9; i++) { const a = (i / 9) * 6.283; add(g, 'rock', 'stone', hsl(0.09, 0.08, 0.5 + (i % 3) * 0.07), [0.34, 0.26, 0.3], [Math.cos(a) * 0.62, 0.1, Math.sin(a) * 0.62], [0, a, 0]); }
     for (let i = 0; i < 3; i++) add(g, 'cyl', 'wood', '#6e5238', [0.14, 0.9, 0.14], [0, 0.22, 0], [1.15, (i / 3) * 6.283, 0]);
-    add(g, 'cone', 'glow', '#ff9a3c', [0.42, 0.7, 0.42], [0, 0.5, 0]);
-    add(g, 'cone', 'glow', '#ffd36a', [0.24, 0.45, 0.24], [0, 0.45, 0]);
+    fires.push(add(g, 'cone', 'glow', '#ff9a3c', [0.42, 0.7, 0.42], [0, 0.5, 0]), add(g, 'cone', 'glow', '#ffd36a', [0.24, 0.45, 0.24], [0, 0.45, 0]));
     lamp(g, [0, 0.7, 0], '#ff9a4a', 1.6);
     return g;
   },

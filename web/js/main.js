@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { heightAt, baseHeightAt, streamDistance, setTerrain, setSeason, setStream, buildStream, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
-import { builders, lamps, glows } from './builders.js';
+import { builders, lamps, glows, fires } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
 import { api, stream, params } from './api.js';
 import { initUI } from './ui.js';
 import { sunPosition, moon, season } from './almanac.js';
-import { loadLayout, buildDressing, registerGlow, addLamp, LANDMARKS } from './dressing.js';
+import { loadLayout, buildDressing, registerGlow, applySeasonNodes, addLamp, LANDMARKS } from './dressing.js';
 
 const canvas = document.getElementById('scene');
 const bubble = document.getElementById('bubble');
@@ -155,6 +155,7 @@ function applyTime() {
   for (const l of lamps) { l.light.intensity = night * 22 * l.power; l.bulb.material.emissiveIntensity = 0.15 + night * 3; }
   for (const g of glows) g.material.emissiveIntensity = 0.1 + night * 2.4;
   flies.visible = night > 0.4;
+  for (const f of fires) f.visible = night > 0.12 && !SEASON.snow;
   renderer.toneMappingExposure = 1.12 - night * 0.14;
   seaFloor.material.color.copy(mix(K('#0f2440'), K('#4fa9b0'), day));
 }
@@ -250,6 +251,7 @@ function frame() {
     if (g.userData.pet) updatePet(g, dt, t);
   }
   updateWeather(dt, t);
+  fires.forEach((f, i) => { if (f.visible) f.scale.y = (i % 2 ? 0.45 : 0.7) * (1 + Math.sin(t * 9 + i * 2) * 0.12 + Math.sin(t * 17 + i) * 0.06); });
   sea.position.y = Math.sin(t * 0.5) * 0.06;
   for (const c of clouds.children) { c.position.x += c.userData.speed * dt; if (c.position.x > 150) c.position.x = -150; }
   if (flies.visible) flySeeds.forEach((f, i) => {
@@ -355,7 +357,7 @@ async function loadModels() {
     try {
       const gltf = await loader.loadAsync(`/assets/models/${m.file}`);
       gltf.scene.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-      if (!m.name.startsWith('memo_')) registerGlow(gltf.scene);
+      if (!m.name.startsWith('memo_')) { registerGlow(gltf.scene); applySeasonNodes(gltf.scene, SEASON); }
       models[m.name.replace(/^ash_/, 'memo_').replace('memo_childlike', 'memo_pup')] = gltf.scene;
     } catch (e) { console.warn(`Could not load model ${m.file}; using the built-in shape.`, e); }
   }));

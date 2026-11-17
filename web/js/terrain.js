@@ -166,7 +166,7 @@ export function buildTerrain(zones) {
       // worn paths from the notice board out to every place
       let d = 99;
       if (Math.hypot(x, z) < 36) for (let k = 0; k < paths.length; k += 2) { const q = paths[k], dd = Math.abs(x - q.x) + Math.abs(z - q.z); if (dd < d * 1.5) d = Math.min(d, Math.hypot(x - q.x, z - q.z)); }
-      for (const zn of zones) d = Math.min(d, Math.max(0, Math.hypot(x - zn.x, z - zn.z) - zn.radius * 0.45) + 0.2);
+      for (const zn of zones) d = Math.min(d, Math.max(0, Math.hypot(x - zn.x, z - zn.z) - zn.radius * 0.3) + 0.35);
       const wobble = Math.sin(x * 2.1) * Math.cos(z * 1.7) * 0.25;
       seasonGround(col);
       col.lerp(season?.snow ? SNOW.clone().lerp(PATH, 0.35) : PATH, (1 - smooth(0.55, 1.5, d + wobble)) * 0.85);
@@ -208,7 +208,7 @@ export function buildGrass(zones) {
     if (h < 0.85 || h > 3.9) continue;
     if (streamDistance(x, z) < 1.5) continue;
     if (season?.snow && rand() < 0.85) continue; // snow flattens much of the grass
-    if (!inMeadow && zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.5)) continue;
+    if (!inMeadow && zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.36)) continue;
     if (pathSamples(zones).some((q, k) => k % 3 === 0 && Math.abs(x - q.x) < 0.9 && Math.abs(z - q.z) < 0.9)) continue;
     p.set(x, h - 0.02, z);
     e.set((rand() - 0.5) * 0.5, rand() * Math.PI, (rand() - 0.5) * 0.5);
