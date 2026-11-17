@@ -53,6 +53,7 @@ app.get('/api/world', anyone, (req, res) => res.json({
   zones: getZones(), objects: getObjects(), memo: memoView(), inventory: getInventory(),
   parcels: all("SELECT id, from_name, kind FROM gifts WHERE status = 'waiting'"),
   project: activeProject(), programs: programsView(), status: status(),
+  island: { name: getState('island_name', ''), english: getState('island_name_english', '') },
   budget: req.who.role === 'owner' ? budgetSummary() : null,
 }));
 app.get('/api/journal', anyone, (req, res) => res.json(all('SELECT * FROM journal ORDER BY id DESC LIMIT 60')));
@@ -60,7 +61,7 @@ app.get('/api/wishes', anyone, (req, res) => res.json(all('SELECT * FROM wishes 
 app.get('/api/events', anyone, (req, res) => res.json(all('SELECT id, ts, type, summary FROM events ORDER BY id DESC LIMIT 60')));
 app.get('/api/mind', anyone, (req, res) => res.json(all('SELECT id, kind, text, created_at FROM beliefs WHERE active = 1 ORDER BY kind, id')));
 app.get('/api/messages', owner, (req, res) => res.json(all('SELECT * FROM messages ORDER BY id DESC LIMIT 80')));
-// The audit of Memo's computer: searchable, filterable, and read-only for everyone.
+// The audit of Ash's computer: searchable, filterable, and read-only for everyone.
 app.get('/api/audit', owner, (req, res) => {
   const q = `%${String(req.query.q || '').slice(0, 80)}%`, appId = String(req.query.app || '');
   res.json(all(`SELECT * FROM audit WHERE (query LIKE ? OR summary LIKE ? OR reason LIKE ? OR status LIKE ?) AND (? = '' OR app = ?) ORDER BY id DESC LIMIT 300`,
@@ -71,7 +72,7 @@ app.post('/api/apps/:id', owner, (req, res) => {
   run('UPDATE apps SET enabled = ? WHERE id = ?', req.body?.enabled ? 1 : 0, req.params.id);
   res.json(getApps());
 });
-// Memo's writing is for everyone to read. The Keeper's books are not: visitors never see them,
+// Ash's writing is for everyone to read. The Keeper's books are not: visitors never see them,
 // and no route serves a book's text at all.
 app.get('/api/documents', anyone, (req, res) => res.json(all('SELECT * FROM documents ORDER BY updated_at DESC LIMIT 60')));
 app.get('/api/books', owner, (req, res) => res.json({
@@ -82,7 +83,7 @@ app.get('/api/books', owner, (req, res) => res.json({
 app.post('/api/books/scan', owner, (req, res) => { scanBooks(); res.json({ ok: true }); });
 app.get('/api/budget', owner, (req, res) => res.json(budgetSummary()));
 
-// Memo's programs run only here: in the visitor's browser, inside a locked sandbox with no
+// Ash's programs run only here: in the visitor's browser, inside a locked sandbox with no
 // network, no cookies and no way to reach the page around it. Never on this computer.
 app.get('/api/programs/:id/run', anyone, (req, res) => {
   const p = get('SELECT html FROM programs WHERE id = ?', Number(req.params.id));
@@ -108,11 +109,11 @@ app.post('/api/gifts', anyone, (req, res) => {
   if (visitor) {
     kind = 'item'; description = '';
     if (giftsToday('invite = ?', req.who.token) >= 3) return res.status(429).json({ error: 'You have left three gifts today. Come back tomorrow!' });
-    if (giftsToday('invite IS NOT NULL') >= 12) return res.status(429).json({ error: 'Memo has had plenty of visitor gifts today. Try tomorrow.' });
+    if (giftsToday('invite IS NOT NULL') >= 12) return res.status(429).json({ error: 'Ash has had plenty of visitor gifts today. Try tomorrow.' });
   }
   if (!name) return res.status(400).json({ error: 'A gift needs a name.' });
   if (blockedReason(`${name} ${note} ${description}`)) return res.status(400).json({ error: 'Please keep gifts gentle. That one cannot be left here.' });
-  if (get("SELECT COUNT(*) AS n FROM gifts WHERE status = 'waiting'").n >= 10) return res.status(429).json({ error: 'There are already a lot of parcels waiting. Let Memo open some first.' });
+  if (get("SELECT COUNT(*) AS n FROM gifts WHERE status = 'waiting'").n >= 10) return res.status(429).json({ error: 'There are already a lot of parcels waiting. Let Ash open some first.' });
   const from = visitor ? `a visitor called ${cleanText(req.who.label, 30)}` : 'the Keeper';
   run('INSERT INTO gifts(ts, name, note, wish_id, project_id, qty, from_name, invite, kind, description) VALUES(?,?,?,?,?,?,?,?,?,?)',
     nowIso(), name.toLowerCase(), note || null, wish?.id ?? null, projectId, qty, from, visitor ? req.who.token : null, kind, description || null);
@@ -163,7 +164,7 @@ app.post('/api/invites/:token/revoke', owner, (req, res) => {
 });
 let lastPoke = 0;
 app.post('/api/poke', owner, async (req, res) => {
-  if (Date.now() - lastPoke < 20000) return res.status(429).json({ error: 'Give Memo a moment.' });
+  if (Date.now() - lastPoke < 20000) return res.status(429).json({ error: 'Give Ash a moment.' });
   lastPoke = Date.now();
   res.json({ result: await heartbeat(true) });
 });
@@ -190,9 +191,9 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).json({ er
 
 app.listen(config.port, config.host, () => {
   const base = `http://localhost:${config.port}`;
-  console.log(`\n  Memo's island is running.\n\n  Your Keeper link (keep it private):\n    ${base}/?k=${OWNER_KEY}\n`);
+  console.log(`\n  Ash's island is running.\n\n  Your Keeper link (keep it private):\n    ${base}/?k=${OWNER_KEY}\n`);
   console.log(demoMode()
-    ? '  Demo mode: no API key found, so Memo is running on simple instincts (free).\n  Add ANTHROPIC_API_KEY to .env and restart to wake his real mind.\n'
+    ? '  Demo mode: no API key found, so Ash is running on simple instincts (free).\n  Add ANTHROPIC_API_KEY to .env and restart to wake his real mind.\n'
     : `  Brain: ${config.tickModel} every ${config.tickMinutes} min, ${config.deepModel} for making and reflecting.\n  Monthly cap: $${config.monthlyCapUsd}.\n`);
   const beat = () => heartbeat().catch((e) => console.error('[memo] heartbeat failed:', e));
   setTimeout(beat, 3000);

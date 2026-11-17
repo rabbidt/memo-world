@@ -1,7 +1,7 @@
 {
   "name": "memo-world",
   "version": "0.1.0",
-  "description": "Memo, an autonomous creature living on a small 3D island.",
+  "description": "Ash, an autonomous creature living on a small 3D island.",
   "main": "server/index.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",

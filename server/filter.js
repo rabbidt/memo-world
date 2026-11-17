@@ -1,4 +1,4 @@
-// A plain word filter used on three things: what Memo asks its computer, what the computer
+// A plain word filter used on three things: what Ash asks its computer, what the computer
 // brings back, and what visitors write. It is deliberately strict; false alarms are fine here.
 const BLOCKED_WORDS = [
   'porn', 'porno', 'xxx', 'nsfw', 'nude', 'nudes', 'naked', 'sex', 'sexy', 'sexual', 'erotic', 'erotica', 'hentai',
@@ -13,7 +13,7 @@ const BLOCKED_WORDS = [
 ];
 const PATTERNS = BLOCKED_WORDS.map((w) => new RegExp(`(^|[^a-z])${w.replace(/ /g, '[\\s-]*')}([^a-z]|$)`, 'i'));
 
-// Domains Memo's computer may never open. The web tools are read-only and cannot reach .onion
+// Domains Ash's computer may never open. The web tools are read-only and cannot reach .onion
 // sites at all; this list is an extra fence around the ordinary web.
 export const BLOCKED_DOMAINS = [
   'pornhub.com', 'xvideos.com', 'xnxx.com', 'xhamster.com', 'redtube.com', 'youporn.com', 'onlyfans.com',

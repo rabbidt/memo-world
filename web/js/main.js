@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, buildTerrain, buildGrass, buildFlowers } from './terrain.js';
+import { heightAt, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
 import { builders, lamps, glows } from './builders.js';
 import { animateRecipe } from './recipes.js';
-import { Memo } from './memo.js';
+import { Ash } from './memo.js';
 import { api, stream, params } from './api.js';
 import { initUI } from './ui.js';
 
@@ -19,7 +19,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog('#cfe9f5', 150, 460);
+scene.fog = new THREE.Fog('#f3dcc0', 45, 330);
 const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 600);
 camera.position.set(30, 21, 38);
 const controls = new OrbitControls(camera, canvas);
@@ -77,7 +77,7 @@ scene.add(flies);
 const forcedHour = params.get('hour') !== null ? Number(params.get('hour')) : null;
 const hourNow = () => { if (forcedHour !== null) return forcedHour; const d = new Date(); return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600; };
 const K = (h) => new THREE.Color(h), mix = (a, b, t) => a.clone().lerp(b, Math.min(1, Math.max(0, t)));
-const SKY = { dayTop: K('#5fa8e6'), dayLow: K('#e9e3d0'), duskTop: K('#6f74b5'), duskLow: K('#ffbf8f'), nightTop: K('#0c1230'), nightLow: K('#27365f') };
+const SKY = { dayTop: K('#74aee0'), dayLow: K('#f4dfc2'), duskTop: K('#6f74b5'), duskLow: K('#ffbf8f'), nightTop: K('#0c1230'), nightLow: K('#27365f') };
 let night = 0;
 function applyTime() {
   const h = hourNow(), ang = ((h - 6) / 12) * Math.PI, elev = Math.sin(ang);
@@ -88,31 +88,31 @@ function applyTime() {
   const pos = skyGeo.attributes.position, col = skyGeo.attributes.color, c = new THREE.Color();
   for (let i = 0; i < pos.count; i++) { const t = Math.pow(Math.max(0, pos.getY(i) / 400), 0.55); c.copy(low).lerp(top, t); col.setXYZ(i, c.r, c.g, c.b); }
   col.needsUpdate = true;
-  scene.fog.color.copy(low);
+  scene.fog.color.copy(mix(low, K('#ffd9b0'), day * 0.45 + golden * 0.3)); // warm haze
   const dir = new THREE.Vector3(Math.cos(ang) * 0.9, Math.max(elev, -0.3), 0.45).normalize();
   sunDisc.position.copy(dir).multiplyScalar(360); sunDisc.visible = elev > -0.08;
   sunDisc.material.color.copy(mix(K('#fff6dd'), K('#ffb36b'), golden));
   const moonDir = new THREE.Vector3(-Math.cos(ang) * 0.8, Math.max(-elev, 0.25), -0.5).normalize();
   moonDisc.position.copy(moonDir).multiplyScalar(360); moonDisc.visible = night > 0.3;
   // one shadow-casting light: the sun by day, the moon by night
-  const lightDir = night > 0.6 ? moonDir : dir.clone().setY(Math.max(dir.y, 0.12)).normalize();
+  const lightDir = night > 0.6 ? moonDir : dir.clone().setY(Math.min(Math.max(dir.y, 0.14), 0.62)).normalize(); // kept low for long soft shadows
   sun.position.copy(lightDir).multiplyScalar(120); sun.target.position.set(0, 0, 0);
-  sun.color.copy(night > 0.6 ? K('#a9bfff') : mix(K('#ffe9c4'), K('#ffa46a'), golden * 0.9));
-  sun.intensity = night > 0.6 ? 0.9 : 0.5 + day * 2.5;
-  hemi.color.copy(mix(K('#3a4c85'), K('#ffeedd'), day)); hemi.groundColor.copy(mix(K('#1b2540'), K('#b7c98a'), day));
-  hemi.intensity = 0.6 + day * 0.3;
+  sun.color.copy(night > 0.6 ? K('#a9bfff') : mix(K('#ffdfae'), K('#ff9e64'), golden * 0.9));
+  sun.intensity = night > 0.6 ? 0.9 : 0.5 + day * 2.9;
+  hemi.color.copy(mix(K('#3a4c85'), K('#ffe9d2'), day)); hemi.groundColor.copy(mix(K('#1b2540'), K('#c4c98a'), day));
+  hemi.intensity = 0.6 + day * 0.22;
   stars.visible = night > 0.2; stars.material.opacity = night;
   sea.material.color.copy(mix(K('#16365a'), K('#7fcfc9'), day).lerp(K('#c9786a'), golden * 0.25));
   cloudMat.color.copy(mix(K('#39456b'), K('#ffffff'), day).lerp(K('#ffc9a1'), golden * 0.6));
   for (const l of lamps) { l.light.intensity = night * 22 * l.power; l.bulb.material.emissiveIntensity = 0.15 + night * 3; }
   for (const g of glows) g.material.emissiveIntensity = 0.1 + night * 2.4;
   flies.visible = night > 0.4;
-  renderer.toneMappingExposure = 0.98 - night * 0.02;
+  renderer.toneMappingExposure = 1.0 - night * 0.04;
   seaFloor.material.color.copy(mix(K('#0f2440'), K('#4fa9b0'), day));
 }
 
 // ---------- the world from the database ----------
-const world = { zones: [], objects: new Map(), memo: new Memo(), parcels: [], data: null };
+const world = { zones: [], objects: new Map(), memo: new Ash(), parcels: [], data: null };
 scene.add(world.memo.root);
 const pickable = [];
 
@@ -203,8 +203,8 @@ function frame() {
   }), flies.instanceMatrix.needsUpdate = true;
   if (follow) { const p = world.memo.root.position; controls.target.lerp(head.set(p.x, p.y + 0.6, p.z), 0.06); }
   controls.update();
-  // thought bubble follows Memo's head
-  head.copy(world.memo.root.position); head.y += 1.25 * world.memo.root.scale.y;
+  // thought bubble follows Ash's head
+  head.copy(world.memo.root.position); head.y += 1.45 * world.memo.root.scale.y;
   head.project(camera);
   const visible = head.z < 1 && Math.abs(head.x) < 1.1 && Math.abs(head.y) < 1.1;
   bubble.style.opacity = visible && bubble.dataset.has ? 1 : 0;
@@ -245,22 +245,22 @@ async function setupEffects() {
     await tryFx('ao', async () => {
       const { ao } = await import('three/addons/tsl/display/GTAONode.js');
       const aoPass = ao(scenePass.getTextureNode('depth'), null, camera);
-      aoPass.resolutionScale = 0.5; aoPass.radius.value = 1.1; aoPass.thickness.value = 1.4; aoPass.scale.value = 1.25;
+      aoPass.resolutionScale = 0.5; aoPass.radius.value = 1.6; aoPass.thickness.value = 1.6; aoPass.scale.value = 1.7;
       const shade = aoPass.getTextureNode().r;
-      return out.mul(TSL.vec4(TSL.mix(TSL.vec3(0.42, 0.36, 0.44), TSL.vec3(1), shade), 1));
+      return out.mul(TSL.vec4(TSL.mix(TSL.vec3(0.36, 0.27, 0.36), TSL.vec3(1), shade), 1));
     });
     await tryFx('dof', async () => {
       const { dof } = await import('three/addons/tsl/display/DepthOfFieldNode.js');
       focusUniform = { distance: TSL.uniform(40), range: TSL.uniform(40) };
-      return dof(out, scenePass.getViewZNode(), focusUniform.distance, focusUniform.range, 1.2);
+      return dof(out, scenePass.getViewZNode(), focusUniform.distance, focusUniform.range, 2.2); // tilt-shift: only a band around the focus is sharp
     });
     await tryFx('glow', async () => {
       const { bloom } = await import('three/addons/tsl/display/BloomNode.js');
-      return out.add(bloom(out, 0.22, 0.6, 1.0));
+      return out.add(bloom(out, 0.34, 0.75, 0.86));
     });
     pipeline.outputNode = out;
     render = () => {
-      if (focusUniform) { const d = camera.position.distanceTo(controls.target); focusUniform.distance.value = d; focusUniform.range.value = Math.max(8, d * 1.15); }
+      if (focusUniform) { const d = camera.position.distanceTo(controls.target); focusUniform.distance.value = d; focusUniform.range.value = Math.max(5, d * 0.5); }
       pipeline.render();
     };
   } catch (e) { console.warn('Effects are not available here; rendering without them.', e); }
@@ -268,7 +268,7 @@ async function setupEffects() {
 
 // Hand-made models (GLB) can replace any procedural mesh: list them in web/assets/models/manifest.json
 // as {"models":[{"name":"library_tower","file":"library_tower.glb"}]}. The name is the object's kind,
-// or memo_childlike / memo_young / memo_growing_up / memo_grown for Memo himself.
+// or memo_pup / memo_young / memo_growing_up / memo_grown for Ash himself.
 const models = {};
 async function loadModels() {
   let manifest;
@@ -279,7 +279,7 @@ async function loadModels() {
     try {
       const gltf = await loader.loadAsync(`/assets/models/${m.file}`);
       gltf.scene.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-      models[m.name] = gltf.scene;
+      models[m.name.replace(/^ash_/, 'memo_').replace('memo_childlike', 'memo_pup')] = gltf.scene;
     } catch (e) { console.warn(`Could not load model ${m.file}; using the built-in shape.`, e); }
   }));
 }
@@ -291,7 +291,7 @@ async function start() {
   let data;
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
-  scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones));
+  scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones), buildCobbles(data.zones));
   await loadModels();
   for (const o of data.objects) placeObject(o);
   world.memo.models = Object.fromEntries(Object.entries(models).filter(([k]) => k.startsWith('memo_')));

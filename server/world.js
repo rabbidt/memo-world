@@ -3,11 +3,11 @@ import { all, get, run, nowIso, getState, setState, emit } from './db.js';
 
 const ZONES = [
   { id: 'board', name: 'Notice Board', x: 0, z: 0, radius: 4.5,
-    description: 'A crooked wooden board at the crossing of the island paths. Memo pins wishes here, and gifts from the Keeper appear beside it.',
+    description: 'A crooked wooden board at the crossing of the island paths. Ash pins wishes here, and gifts from the Keeper appear beside it.',
     gatherables: ['pin', 'paper scrap'] },
-  { id: 'nook', name: "Memo's Nook", x: -9, z: 9, radius: 5,
-    description: 'A snug burrow under a mossy mound with a round door. Home. The best place to nap.',
-    gatherables: ['moss tuft', 'soft lint'] },
+  { id: 'nook', name: 'Den', x: -9, z: 9, radius: 5,
+    description: 'A snug den under a grassy mound with a round door. Home. The best place to nap.',
+    gatherables: ['moss tuft', 'soft lint', 'shed fur'] },
   { id: 'garden', name: 'Garden', x: 11, z: 9, radius: 6.5,
     description: 'Little fenced plots of dark soil with sprouts, flowers and a watering can.',
     gatherables: ['seed', 'petal', 'pebble', 'sprig'] },
@@ -59,7 +59,7 @@ export function seedWorld() {
   addObject({ ...at('board', 0, -1.2), kind: 'notice_board', name: 'Notice Board' });
   addObject({ ...at('board', 2.6, 0.6), kind: 'lantern' });
   addObject({ ...at('board', -2.4, 1.4), kind: 'signpost' });
-  addObject({ ...at('nook', 0, -0.5), kind: 'burrow', name: "Memo's Nook", rot: 2.4 });
+  addObject({ ...at('nook', 0, -0.5), kind: 'burrow', name: 'Den', rot: 2.4 });
   addObject({ ...at('nook', 2.6, 1.8), kind: 'lantern' });
   addObject({ ...at('nook', -2.8, 1.5), kind: 'mushrooms' });
   for (const [dx, dz, crop] of [[-2.2, -1.6, 'sprout'], [2.2, -1.6, 'flower'], [-2.2, 2.0, 'leafy'], [2.2, 2.0, 'sprout']]) {
@@ -71,7 +71,7 @@ export function seedWorld() {
   addObject({ ...at('workshop', -3.2, 2.2), kind: 'log_pile', rot: 0.4 });
   addObject({ ...at('library', 0, -0.8), kind: 'library_tower', name: 'Little Library', rot: 0.15 });
   addObject({ ...at('library', 3.0, 1.6), kind: 'bench', rot: -0.9 });
-  addObject({ ...at('library', -3.0, 1.2), kind: 'computer', name: "Memo's Computer", rot: 0.9 });
+  addObject({ ...at('library', -3.0, 1.2), kind: 'computer', name: "Ash's Computer", rot: 0.9 });
   addObject({ ...at('pond', 0, 0), kind: 'pond', name: 'Pond', params: { radius: 4.6 } });
   addObject({ ...at('pond', 5.6, 1.5), kind: 'bench', rot: 1.4 });
   addObject({ ...at('lookout', 0.6, 0.4), kind: 'stump', name: 'Sitting Stump' });
@@ -79,6 +79,11 @@ export function seedWorld() {
   addObject({ ...at('shore', 1.5, 0.5), kind: 'driftwood', rot: 0.8 });
   addObject({ ...at('shore', -1.2, -1.6), kind: 'shells' });
   addObject({ ...at('meadow', 0, 0), kind: 'flower_patch', params: { count: 26, spread: 5.5 } });
+
+  // Low curving dry-stone walls that hug the places.
+  for (const [id, radius, from, to] of [['garden', 6.2, -0.6, 2.9], ['library', 5.0, 2.0, 5.6], ['nook', 4.9, 2.6, 5.3], ['workshop', 5.6, -2.4, 0.4], ['board', 4.4, 3.5, 5.2], ['pond', 6.6, 3.6, 5.9], ['lookout', 4.6, -1.2, 1.6]]) {
+    addObject({ zone_id: null, x: Z[id].x, z: Z[id].z, kind: 'wall', params: { radius, from, to } });
+  }
 
   // Scattered scenery, kept clear of the zone centres.
   const rand = rng(20261117);
@@ -93,11 +98,24 @@ export function seedWorld() {
       placed++;
     }
   };
-  scatter('tree', 34, 5, 30, () => ({ hue: rand() }));
-  scatter('pine', 16, 10, 31, () => ({ hue: rand() }));
+  // Trees grow in clumps, with singles in between.
+  const clump = (kind, groups, size) => {
+    for (let gI = 0, guard = 0; gI < groups && guard < 400; guard++) {
+      const a = rand() * Math.PI * 2, r = 7 + Math.sqrt(rand()) * 22, cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+      if (!clear(cx, cz, 1.0)) continue;
+      gI++;
+      for (let i = 0; i < size; i++) {
+        const x = cx + (rand() - 0.5) * 5.5, z = cz + (rand() - 0.5) * 5.5;
+        if (clear(x, z, 0.85)) addObject({ kind, x, z, rot: rand() * Math.PI * 2, scale: 0.7 + rand() * 0.75, params: { hue: rand() } });
+      }
+    }
+  };
+  clump('tree', 13, 5); clump('pine', 6, 4);
+  scatter('tree', 14, 5, 30, () => ({ hue: rand() }));
+  scatter('pine', 6, 10, 31, () => ({ hue: rand() }));
   scatter('rock', 22, 4, 33, () => ({ seed: Math.floor(rand() * 1e6) }));
-  scatter('bush', 26, 4, 30, () => ({ hue: rand(), berries: rand() > 0.6 }));
-  scatter('flower_patch', 14, 4, 28, () => ({ count: 5 + Math.floor(rand() * 6), spread: 1.4 }));
+  scatter('bush', 44, 4, 31, () => ({ hue: rand(), berries: rand() > 0.6 }));
+  scatter('flower_patch', 26, 4, 30, () => ({ count: 5 + Math.floor(rand() * 6), spread: 1.4 }));
   scatter('mushrooms', 7, 6, 28);
 
   setState('memo', {

@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { heightAt } from './terrain.js';
 
-// Memo himself: a small round mossy creature with a leaf tail, a sprout on his head and a notebook.
+// Ash himself: a small wolf who walks upright and carries a notebook. This is the built-in
+// fallback shape; a hand-made model listed in web/assets/models/manifest.json replaces it.
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...o });
-const SPH = new THREE.SphereGeometry(0.5, 32, 24), BLOB = new THREE.IcosahedronGeometry(0.5, 2);
+const SPH = new THREE.SphereGeometry(0.5, 32, 24), CONE = new THREE.ConeGeometry(0.5, 1, 20), BLOB = new THREE.IcosahedronGeometry(0.5, 2);
 function part(parent, geo, material, scale, pos, rot) {
   const m = new THREE.Mesh(geo, material);
   m.scale.set(...(Array.isArray(scale) ? scale : [scale, scale, scale]));
@@ -11,62 +12,68 @@ function part(parent, geo, material, scale, pos, rot) {
   m.castShadow = true; parent.add(m); return m;
 }
 
-export class Memo {
+export class Ash {
   constructor() {
     this.root = new THREE.Group();      // world position + facing
     this.body = new THREE.Group();      // squash, bob, lean
     this.root.add(this.body);
-    const moss = mat('#93bd6a', { roughness: 1 }), mossDark = mat('#7aa655', { roughness: 1 }), mossLight = mat('#b7d884', { roughness: 1 });
-    const cream = mat('#f3e9cf'), dark = mat('#26221d', { roughness: 0.25 }), white = mat('#ffffff', { roughness: 0.2 });
-    const pink = mat('#f2a7a0'), foot = mat('#d99a5b'), leaf = mat('#6fb04f', { roughness: 0.7, side: THREE.DoubleSide }), leafLight = mat('#9ad070', { roughness: 0.7 });
+    const fur = mat('#8b93a1', { roughness: 1 }), furDark = mat('#6a7280', { roughness: 1 }), furLight = mat('#aab1bd', { roughness: 1 });
+    const cream = mat('#f4ecdc'), dark = mat('#26221d', { roughness: 0.25 }), white = mat('#ffffff', { roughness: 0.2 }), pink = mat('#e9a9a0');
 
-    part(this.body, SPH, moss, [0.86, 0.8, 0.8], [0, 0.46, 0]);
-    part(this.body, SPH, cream, [0.6, 0.56, 0.5], [0, 0.4, 0.17]);
-    // moss tufts over the back and head
-    let s = 3;
-    const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-    for (let i = 0; i < 22; i++) {
-      const th = rnd() * Math.PI * 2, ph = rnd() * 1.15;
-      const x = Math.sin(ph) * Math.cos(th) * 0.42, y = Math.cos(ph) * 0.39, z = Math.sin(ph) * Math.sin(th) * 0.39;
-      if (z > 0.2 && y < 0.3) continue;
-      part(this.body, BLOB, [moss, mossDark, mossLight][i % 3], 0.13 + rnd() * 0.1, [x, 0.46 + y, z], [rnd() * 3, rnd() * 3, 0]);
-    }
-    // face
+    // torso and belly
+    part(this.body, SPH, fur, [0.6, 0.62, 0.54], [0, 0.36, 0]);
+    part(this.body, SPH, cream, [0.42, 0.46, 0.36], [0, 0.33, 0.13]);
+    part(this.body, BLOB, cream, [0.3, 0.2, 0.2], [0, 0.56, 0.2]);            // chest ruff
+    // head
+    this.head = new THREE.Group(); this.head.position.set(0, 0.76, 0.03); this.body.add(this.head);
+    part(this.head, SPH, fur, [0.62, 0.54, 0.54], [0, 0, 0]);
+    part(this.head, SPH, furDark, [0.34, 0.2, 0.4], [0, 0.17, -0.04]);          // darker brow and crown
+    for (const sx of [-1, 1]) part(this.head, CONE, furLight, [0.2, 0.26, 0.14], [sx * 0.29, -0.1, 0.06], [0, 0, sx * -2.0]); // cheek fluff
+    this.muzzle = new THREE.Group(); this.muzzle.position.set(0, -0.08, 0.22); this.head.add(this.muzzle);
+    part(this.muzzle, SPH, cream, [0.28, 0.2, 0.3], [0, 0, 0.04]);
+    part(this.muzzle, SPH, dark, [0.09, 0.07, 0.07], [0, 0.05, 0.19]);
     this.eyes = [];
     for (const sx of [-1, 1]) {
-      const eye = new THREE.Group(); eye.position.set(sx * 0.155, 0.56, 0.345); this.body.add(eye);
-      part(eye, SPH, dark, [0.115, 0.135, 0.07], [0, 0, 0]);
-      part(eye, SPH, white, 0.04, [sx * -0.02, 0.035, 0.03]);
+      const eye = new THREE.Group(); eye.position.set(sx * 0.15, 0.05, 0.235); this.head.add(eye);
+      part(eye, SPH, dark, [0.1, 0.125, 0.06], [0, 0, 0]);
+      part(eye, SPH, white, 0.035, [sx * -0.018, 0.032, 0.026]);
       this.eyes.push(eye);
-      part(this.body, SPH, pink, [0.1, 0.06, 0.04], [sx * 0.26, 0.45, 0.33]);
     }
-    part(this.body, SPH, mat('#c98f6b'), [0.07, 0.05, 0.05], [0, 0.49, 0.4]);
-    // sprout
-    this.sprout = new THREE.Group(); this.sprout.position.set(0, 0.84, 0.02); this.body.add(this.sprout);
-    part(this.sprout, new THREE.CylinderGeometry(0.012, 0.018, 0.16, 6), leaf, 1, [0, 0.06, 0]);
-    this.leaves = [
-      part(this.sprout, SPH, leafLight, [0.17, 0.03, 0.09], [0.07, 0.15, 0], [0, 0, 0.5]),
-      part(this.sprout, SPH, leafLight, [0.17, 0.03, 0.09], [-0.07, 0.15, 0], [0, 0, -0.5]),
-      part(this.sprout, SPH, leaf, [0.13, 0.03, 0.07], [0, 0.2, 0.05], [0.6, 1.57, 0]),
-      part(this.sprout, SPH, leaf, [0.13, 0.03, 0.07], [0, 0.2, -0.05], [-0.6, 1.57, 0]),
-    ];
-    // leaf tail
-    this.tail = new THREE.Group(); this.tail.position.set(0, 0.34, -0.36); this.body.add(this.tail);
-    part(this.tail, SPH, leaf, [0.26, 0.04, 0.5], [0, 0.1, -0.2], [0.55, 0, 0]);
-    part(this.tail, new THREE.CylinderGeometry(0.01, 0.014, 0.46, 5), mossDark, 1, [0, 0.115, -0.2], [0.55 + Math.PI / 2, 0, 0]);
-    // limbs
-    this.feet = [part(this.root, SPH, foot, [0.17, 0.09, 0.24], [-0.15, 0.045, 0.1]), part(this.root, SPH, foot, [0.17, 0.09, 0.24], [0.15, 0.045, 0.1])];
+    // ears (animated as the optional "Sprout" node: they twitch)
+    this.sprout = new THREE.Group(); this.sprout.position.set(0, 0.2, -0.02); this.head.add(this.sprout);
+    this.ears = [];
+    for (const sx of [-1, 1]) {
+      const ear = new THREE.Group(); ear.position.set(sx * 0.2, 0.08, 0); ear.rotation.z = sx * -0.28; this.sprout.add(ear);
+      part(ear, CONE, furDark, [0.2, 0.3, 0.12], [0, 0.1, 0]);
+      part(ear, CONE, pink, [0.11, 0.2, 0.06], [0, 0.08, 0.035]);
+      this.ears.push(ear);
+    }
+    this.leaves = [];
+    // bushy tail with a pale tip
+    this.tail = new THREE.Group(); this.tail.position.set(0, 0.24, -0.24); this.body.add(this.tail);
+    part(this.tail, SPH, fur, [0.2, 0.2, 0.44], [0, 0.12, -0.2], [0.7, 0, 0]);
+    part(this.tail, SPH, cream, [0.15, 0.15, 0.22], [0, 0.26, -0.36], [0.7, 0, 0]);
+    // hind paws, front paws
+    this.feet = [];
+    for (const sx of [-1, 1]) {
+      const foot = new THREE.Group(); foot.position.set(sx * 0.16, 0.05, 0.1); this.root.add(foot);
+      part(foot, SPH, furDark, [0.18, 0.1, 0.26], [0, 0, 0]);
+      part(foot, SPH, cream, [0.14, 0.07, 0.1], [0, 0, 0.1]);
+      this.feet.push(foot);
+    }
     this.arms = [];
     for (const sx of [-1, 1]) {
-      const arm = new THREE.Group(); arm.position.set(sx * 0.38, 0.44, 0.08); this.body.add(arm);
-      part(arm, SPH, moss, [0.12, 0.22, 0.12], [0, -0.07, 0.02]);
+      const arm = new THREE.Group(); arm.position.set(sx * 0.29, 0.5, 0.06); this.body.add(arm);
+      part(arm, SPH, fur, [0.12, 0.26, 0.12], [0, -0.1, 0.02]);
+      part(arm, SPH, cream, [0.11, 0.09, 0.11], [0, -0.22, 0.03]);
       this.arms.push(arm);
     }
     // notebook
-    this.book = new THREE.Group(); this.arms[1].add(this.book); this.book.position.set(0.04, -0.16, 0.1);
-    part(this.book, new THREE.BoxGeometry(1, 1, 1), mat('#8c4f3a'), [0.2, 0.25, 0.05], [0, 0, 0]);
-    part(this.book, new THREE.BoxGeometry(1, 1, 1), mat('#f6efdc'), [0.17, 0.22, 0.055], [0.01, 0, 0]);
-    part(this.book, new THREE.BoxGeometry(1, 1, 1), mat('#e6c35c', { metalness: 0.6, roughness: 0.4 }), [0.03, 0.26, 0.06], [-0.07, 0, 0]);
+    this.book = new THREE.Group(); this.arms[1].add(this.book); this.book.position.set(0.05, -0.24, 0.1);
+    const BOX = new THREE.BoxGeometry(1, 1, 1);
+    part(this.book, BOX, mat('#8c4f3a'), [0.2, 0.25, 0.05], [0, 0, 0]);
+    part(this.book, BOX, mat('#f6efdc'), [0.17, 0.22, 0.055], [0.01, 0, 0]);
+    part(this.book, BOX, mat('#e6c35c', { metalness: 0.6, roughness: 0.4 }), [0.03, 0.26, 0.06], [-0.07, 0, 0]);
 
     this.rememberRest();
     this.models = {}; this.modelStage = null;
@@ -81,7 +88,8 @@ export class Memo {
   }
 
   // Swap in a hand-made model for this stage of life. Nodes are found by name:
-  // Body, Sprout, EyeL, EyeR, ArmL, ArmR, Notebook, Tail, FootL, FootR. Missing ones are simply not animated.
+  // Body, EyeL, EyeR, ArmL, ArmR, Notebook, Tail, FootL, FootR, and optionally Sprout (ears or a
+  // tuft that twitches). Missing ones are simply not animated.
   adoptModel(source) {
     const model = source.clone(true), find = (name) => model.getObjectByName(name) || new THREE.Object3D();
     this.root.clear(); this.root.add(model); this.root.scale.setScalar(1);
@@ -91,16 +99,18 @@ export class Memo {
     this.rememberRest();
   }
 
-  // Growing up: bigger, calmer proportions, and more leaves on the sprout. Stops at adult.
+  // Growing up, pup to adult: bigger, a smaller head for his body, a longer muzzle, taller ears.
+  // It stops at adult.
   setMaturity(m) {
     this.maturity = m;
     if (this.custom) return;
     this.root.scale.setScalar(0.72 + 0.33 * m);
-    const eye = 1.28 - 0.3 * m;
+    const eye = 1.25 - 0.3 * m;
     for (const e of this.eyes) e.userData.base = eye;
-    this.leaves[2].visible = this.leaves[3].visible = m >= 0.5;
-    this.sprout.scale.setScalar(0.85 + 0.5 * m);
-    this.tail.scale.setScalar(0.8 + 0.4 * m);
+    this.head.scale.setScalar(1.14 - 0.16 * m);
+    this.muzzle.scale.set(1, 1, 0.8 + 0.5 * m);
+    for (const ear of this.ears) ear.scale.set(1, 0.8 + 0.45 * m, 1);
+    this.tail.scale.setScalar(0.8 + 0.45 * m);
   }
 
   setState(memo) {
@@ -154,7 +164,8 @@ export class Memo {
     this.arms[0].rotation.x += (rx(this.arms[0]).x + armL - this.arms[0].rotation.x) * 0.25;
     this.arms[1].rotation.x += (rx(this.arms[1]).x + armR - bookFront * 0.3 - this.arms[1].rotation.x) * 0.25;
     this.tail.rotation.y = rx(this.tail).y + Math.sin(t * (walking ? 8 : 1.6)) * (asleep ? 0.03 : 0.22);
-    this.sprout.rotation.z = rx(this.sprout).z + Math.sin(t * 1.9) * 0.08;
+    // ears: mostly still, with a quick twitch now and then
+    this.sprout.rotation.z = rx(this.sprout).z + (Math.sin(t * 0.7) > 0.93 ? Math.sin(t * 30) * 0.1 : 0);
 
     this.blink -= dt;
     if (this.blink < -0.12) this.blink = 2 + Math.random() * 4;

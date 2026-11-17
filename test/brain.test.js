@@ -1,4 +1,4 @@
-// End-to-end check of Memo's mind with a scripted stand-in for Claude (no API key, no cost).
+// End-to-end check of Ash's mind with a scripted stand-in for Claude (no API key, no cost).
 // Run with: npm test
 // It works in a fresh folder under the system temp directory and leaves it there afterwards.
 import assert from 'node:assert/strict';
@@ -60,7 +60,8 @@ assert.equal(getMemo().thoughtEnglish, 'Little by little.');
 assert.ok(getInventory().some((i) => i.name === 'shell'));
 assert.equal(all('SELECT * FROM beliefs WHERE active = 1').length, 2);
 assert.match(calls.at(-1).messages[0].content, /You feel .* lonely/);
-assert.match(calls.at(-1).system, /very young/);
+assert.match(calls.at(-1).system, /small wolf/);
+assert.match(calls.at(-1).system, /You are a pup/);
 
 // 2. Craft: the recipe is clamped and kept in the world.
 await moment([['craft', { idea: 'a shell tower', materials: ['shell'] }]], [think]);
@@ -70,7 +71,7 @@ assert.equal(made.zone_id, 'shore');
 assert.ok(recipe.parts.every((p) => p.size.every((v) => v <= 2) && Math.abs(p.position[0]) <= 1.2 && /^#[0-9a-f]{6}$/i.test(p.color)));
 assert.equal(recipe.parts[2].material, 'matte');
 
-// 3. Town building: plan, supplies wished for, Keeper sends them, Memo opens and builds.
+// 3. Town building: plan, supplies wished for, Keeper sends them, Ash opens and builds.
 await moment([['plan_building', { idea: 'a house by the tide' }]], [think]);
 const supply = get('SELECT * FROM wishes WHERE project_id IS NOT NULL');
 assert.equal(supply.supply, 'planks');
@@ -122,11 +123,17 @@ assert.equal(get("SELECT text FROM beliefs WHERE kind = 'goal' AND active = 1").
 assert.equal(all("SELECT * FROM beliefs WHERE kind IN ('hobby', 'word') AND active = 1").length, 2);
 assert.equal(get('SELECT kind FROM journal ORDER BY id DESC').kind, 'reflection');
 
+// 8b. He names his own island, and can rename it.
+await moment([['name_island', { name: 'Tala Moki', english: 'Moss Story' }], think]);
+assert.match(get("SELECT value FROM state WHERE key = 'island_name'").value, /Tala Moki/);
+assert.match(await brain.actions.name_island({ name: 'Nala', english: 'Night' }), /called Nala/);
+assert.match(get("SELECT value FROM state WHERE key = 'island_name'").value, /Nala/);
+
 // 9. Growing up is capped at adult.
 assert.ok(brain.maturity() > 0 && brain.maturity() <= 1);
 assert.equal(brain.lifeStage(5).name, 'grown');
 
-// 10. The hard cap: when the month's budget is spent Memo hibernates without any API call,
+// 10. The hard cap: when the month's budget is spent Ash hibernates without any API call,
 //     and wakes exactly as he was, with no memory of it.
 const before = { memo: getMemo(), needs: brain.getNeeds(), events: get('SELECT COUNT(*) AS n FROM events').n, calls: calls.length };
 assert.ok(spentThisMonth() > 0 && spentThisMonth() < 1);

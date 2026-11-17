@@ -14,6 +14,8 @@ const G = {
   cone6: new THREE.ConeGeometry(0.5, 1, 14),
   dome: new THREE.SphereGeometry(0.5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
   disc: new THREE.CylinderGeometry(0.5, 0.5, 0.04, 32),
+  skirt: new THREE.CylinderGeometry(0.34, 0.5, 1, 28),
+  round: new THREE.SphereGeometry(0.5, 12, 8),
 };
 
 function add(group, geo, mat, color, size, pos, rot) {
@@ -27,6 +29,32 @@ function add(group, geo, mat, color, size, pos, rot) {
 }
 const hsl = (h, s, l) => `#${new THREE.Color().setHSL(h, s, l).getHexString()}`;
 function seeded(seed) { let s = (seed * 9301 + 49297) % 233280; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+
+// A chunky tiled round roof: overlapping skirts of tile, each a slightly different clay colour.
+function tiledCone(g, radius, height, y, hue = 0.04) {
+  const layers = 6;
+  for (let i = 0; i < layers; i++) {
+    const r = radius * (1 - i / (layers + 0.6)) * 2, h = (height / layers) * 1.5;
+    add(g, 'skirt', 'matte', hsl(hue + (i % 2) * 0.012, 0.5, 0.6 + (i % 3) * 0.035), [r, h, r], [0, y + (i + 0.5) * (height / layers), 0], [0, i * 0.4, 0]);
+  }
+  add(g, 'cone', 'matte', hsl(hue, 0.5, 0.56), [radius * 0.5, height * 0.3, radius * 0.5], [0, y + height * 1.08, 0]);
+}
+// A chunky tiled pitched roof: rows of thick overlapping slabs stepping up to a ridge beam.
+function tiledPitch(g, width, depth, rise, y, hue = 0.04) {
+  const rows = 5, half = depth / 2 + 0.45, slope = Math.hypot(half, rise), tilt = Math.atan2(rise, half);
+  for (const side of [-1, 1]) for (let j = 0; j < rows; j++) {
+    const t = (j + 0.5) / rows;
+    add(g, 'box', 'matte', hsl(hue + (j % 2) * 0.012, 0.5, 0.6 + ((j + (side > 0)) % 3) * 0.035), [width + 0.5 - j * 0.04, 0.16, (slope / rows) * 1.35],
+      [0, y + rise * t + 0.06, side * half * (1 - t)], [side * tilt, 0, 0]);
+  }
+  add(g, 'cyl', 'wood', '#8f7252', [0.22, width + 0.7, 0.22], [0, y + rise + 0.1, 0], [0, 0, Math.PI / 2]);
+}
+// A ring of foundation stones so buildings sit snugly on rolling ground.
+function footing(g, radius, n = 14, seed = 1) {
+  const r = seeded(seed);
+  add(g, 'cyl', 'stone', '#cfc4ae', [radius * 2, 0.9, radius * 2], [0, -0.3, 0]);
+  for (let i = 0; i < n; i++) { const a = (i / n) * 6.283; add(g, 'round', 'stone', hsl(0.09, 0.14, 0.66 + r() * 0.14), [0.55 + r() * 0.3, 0.4, 0.45], [Math.cos(a) * radius, 0.08, Math.sin(a) * radius], [0, -a, 0]); }
+}
 
 // Lamps register here so day/night can switch them on.
 export const lamps = [];
@@ -124,6 +152,7 @@ export const builders = {
   },
   notice_board() {
     const g = new THREE.Group();
+    for (const x of [-1.1, 1.1]) for (let i = 0; i < 4; i++) add(g, 'round', 'stone', hsl(0.09, 0.14, 0.68 + (i % 3) * 0.05), [0.42, 0.3, 0.38], [x + Math.cos(i * 1.6) * 0.22, 0.1, Math.sin(i * 1.6) * 0.22]);
     add(g, 'cyl', 'wood', '#8f7252', [0.16, 2.3, 0.16], [-1.1, 1.15, 0], [0, 0, 0.04]);
     add(g, 'cyl', 'wood', '#8f7252', [0.16, 2.3, 0.16], [1.1, 1.15, 0], [0, 0, -0.03]);
     add(g, 'box', 'wood', '#b08a5b', [2.3, 1.3, 0.1], [0, 1.45, 0]);
@@ -139,7 +168,8 @@ export const builders = {
     add(g, 'dome', 'moss', '#a5cc78', [5.2, 4.4, 4.8], [0, -0.1, 0]);
     add(g, 'blob', 'moss', '#b4d887', [2.2, 1.2, 2.0], [-1.4, 1.2, -0.5]);
     add(g, 'blob', 'moss', '#93bd6b', [1.8, 1.0, 1.8], [1.3, 1.3, -0.8]);
-    add(g, 'cyl', 'wood', '#8c5a3c', [1.3, 0.2, 1.3], [0, 0.72, 2.22], [Math.PI / 2 - 0.25, 0, 0]);
+    add(g, 'cyl', 'wood', '#b97a52', [1.3, 0.2, 1.3], [0, 0.72, 2.22], [Math.PI / 2 - 0.25, 0, 0]);
+    for (let i = 0; i < 9; i++) { const a = -0.5 + (i / 8) * 4.14; add(g, 'round', 'stone', hsl(0.09, 0.14, 0.68 + (i % 3) * 0.05), [0.42, 0.36, 0.34], [Math.cos(a) * 0.86, 0.74 + Math.sin(a) * 0.82, 2.2 - Math.sin(a) * 0.2]); }
     add(g, 'cyl', 'wood', '#6b4129', [1.5, 0.12, 1.5], [0, 0.72, 2.17], [Math.PI / 2 - 0.25, 0, 0]);
     add(g, 'sphere', 'metal', '#e6c35c', 0.12, [0.38, 0.72, 2.36]);
     glowPane(g, 'cyl', [0.6, 0.1, 0.6], [1.45, 1.05, 1.72], [Math.PI / 2 - 0.4, 0, -0.5]);
@@ -167,23 +197,27 @@ export const builders = {
     add(g, 'torus' in G ? 'cyl' : 'cyl', 'metal', '#6aa3aa', [0.16, 0.05, 0.16], [0.56, 0.5, 0], [0, 0, -0.9]);
     return g;
   },
-  workshop_hut() {
+  workshop_hut(o) {
     const g = new THREE.Group();
-    add(g, 'box', 'wood', '#b89464', [4.4, 0.16, 3.6], [0, 0.08, 0]);
-    for (const [x, z] of [[-2, -1.6], [2, -1.6], [-2, 1.6], [2, 1.6]]) add(g, 'cyl', 'wood', '#8f7252', [0.22, 2.5, 0.22], [x, 1.25, z]);
-    add(g, 'box', 'wood', '#a9825a', [4.4, 2.1, 0.14], [0, 1.2, -1.65]);
-    add(g, 'box', 'matte', '#d98a6a', [5.2, 0.16, 2.5], [0, 3.05, -1.0], [-0.6, 0, 0]);
-    add(g, 'box', 'matte', '#e39a78', [5.2, 0.16, 2.5], [0, 3.05, 1.0], [0.6, 0, 0]);
-    add(g, 'box', 'wood', '#8f7252', [5.3, 0.18, 0.18], [0, 3.72, 0]);
-    add(g, 'box', 'wood', '#8c6a47', [2.4, 0.14, 0.9], [-0.6, 1.0, -1.0]);
-    for (const x of [-1.6, 0.4]) add(g, 'box', 'wood', '#8f7252', [0.14, 0.9, 0.7], [x, 0.5, -1.0]);
-    add(g, 'box', 'metal', '#8a8d91', [0.5, 0.1, 0.16], [-1.0, 1.12, -0.9], [0, 0.4, 0]);
-    add(g, 'cyl', 'wood', '#d9b98a', [0.1, 0.5, 0.1], [-0.2, 1.12, -0.95], [0, 0, 1.57]);
-    add(g, 'sphere', 'glossy', '#e76f51', 0.2, [0.2, 1.17, -1.1]);
-    for (let i = 0; i < 4; i++) add(g, 'box', 'metal', ['#8a8d91', '#b08a5b', '#5d6a73', '#c9a878'][i], [0.1, 0.5, 0.06], [-1.4 + i * 0.5, 1.9, -1.55], [0, 0, (i - 1.5) * 0.15]);
-    add(g, 'cyl', 'stone', '#8f897d', [0.5, 1.6, 0.5], [1.5, 3.4, -1.0]);
-    add(g, 'box', 'wood', '#8c6a47', [0.7, 0.7, 0.7], [1.5, 0.5, 0.9], [0, 0.3, 0]);
-    lamp(g, [0, 2.6, -0.3], '#ffc878', 0.9);
+    footing(g, 2.9, 18, o.id);
+    add(g, 'box', 'wood', '#c9a878', [4.6, 0.16, 3.8], [0, 0.2, 0]);
+    for (const [x, z] of [[-2.1, -1.7], [2.1, -1.7], [-2.1, 1.7], [2.1, 1.7]]) add(g, 'cyl', 'wood', '#8f7252', [0.26, 2.3, 0.26], [x, 1.35, z]);
+    add(g, 'box', 'matte', '#f3e8d2', [4.3, 2.1, 0.2], [0, 1.3, -1.7]);                 // plaster back wall
+    add(g, 'box', 'matte', '#f3e8d2', [0.2, 2.1, 1.6], [-2.1, 1.3, -0.9]);
+    for (const x of [-1.05, 1.05]) add(g, 'box', 'wood', '#8f7252', [0.14, 2.1, 0.24], [x, 1.3, -1.7]); // timber frame
+    add(g, 'box', 'wood', '#8f7252', [4.5, 0.16, 0.26], [0, 2.4, -1.7]);
+    add(g, 'box', 'wood', '#8f7252', [4.5, 0.2, 0.2], [0, 2.5, 1.7]);
+    glowPane(g, 'cyl', [0.7, 0.08, 0.7], [0, 1.6, -1.58], [Math.PI / 2, 0, 0]);
+    tiledPitch(g, 4.6, 3.8, 1.5, 2.55);
+    add(g, 'box', 'wood', '#a9825a', [2.4, 0.14, 0.9], [-0.5, 1.1, -1.05]);
+    for (const x of [-1.5, 0.5]) add(g, 'box', 'wood', '#8f7252', [0.14, 0.9, 0.7], [x, 0.65, -1.05]);
+    add(g, 'box', 'metal', '#8a8d91', [0.5, 0.1, 0.16], [-0.9, 1.22, -0.95], [0, 0.4, 0]);
+    add(g, 'cyl', 'wood', '#d9b98a', [0.1, 0.5, 0.1], [-0.1, 1.22, -1.0], [0, 0, 1.57]);
+    add(g, 'sphere', 'glossy', '#e76f51', 0.2, [0.3, 1.27, -1.15]);
+    for (let i = 0; i < 4; i++) add(g, 'box', 'metal', ['#8a8d91', '#b08a5b', '#5d6a73', '#c9a878'][i], [0.1, 0.5, 0.06], [-1.4 + i * 0.5, 1.95, -1.56], [0, 0, (i - 1.5) * 0.15]);
+    for (let i = 0; i < 6; i++) add(g, 'round', 'stone', hsl(0.09, 0.14, 0.66 + (i % 3) * 0.05), [0.75 - i * 0.03, 0.5, 0.7 - i * 0.03], [1.6, 2.7 + i * 0.36, -1.0], [0, i, 0]); // stone chimney
+    add(g, 'box', 'wood', '#a9825a', [0.7, 0.7, 0.7], [1.5, 0.63, 0.9], [0, 0.3, 0]);
+    lamp(g, [0, 2.3, -0.3], '#ffc878', 0.9);
     return g;
   },
   log_pile() {
@@ -194,22 +228,26 @@ export const builders = {
     }
     return g;
   },
-  library_tower() {
+  library_tower(o) {
     const g = new THREE.Group();
-    add(g, 'cyl', 'stone', '#e6dcc6', [3.4, 3.6, 3.4], [0, 1.8, 0]);
-    add(g, 'cyl', 'stone', '#d2c7b0', [3.7, 0.3, 3.7], [0, 0.15, 0]);
-    add(g, 'cyl', 'wood', '#8f7252', [3.8, 0.2, 3.8], [0, 3.65, 0]);
-    add(g, 'cone', 'matte', '#7fb8a8', [4.4, 2.4, 4.4], [0, 4.9, 0]);
-    add(g, 'sphere', 'metal', '#e6c35c', 0.22, [0, 6.15, 0]);
-    add(g, 'box', 'wood', '#7a4f33', [0.95, 1.6, 0.16], [0, 0.95, 1.66]);
-    add(g, 'cyl', 'wood', '#7a4f33', [0.95, 0.16, 0.95], [0, 1.72, 1.66], [Math.PI / 2, 0, 0]);
-    add(g, 'sphere', 'metal', '#e6c35c', 0.1, [0.3, 0.95, 1.78]);
-    for (const a of [-0.95, 0.95, 2.4, -2.4]) glowPane(g, 'cyl', [0.6, 0.1, 0.6], [Math.sin(a) * 1.68, 2.45, Math.cos(a) * 1.68], [Math.PI / 2, 0, -a]);
-    // a shelf of books that live outside under the eaves
-    add(g, 'box', 'wood', '#8c6a47', [1.4, 1.3, 0.4], [2.3, 0.65, 0.9], [0, -0.9, 0]);
-    const cols = ['#d1495b', '#edae49', '#00798c', '#8f6bb3', '#66a182', '#e58f4e'];
-    for (let row = 0; row < 2; row++) for (let i = 0; i < 6; i++) add(g, 'box', 'matte', cols[(i + row * 2) % 6], [0.14, 0.4, 0.26], [2.3 + (i - 2.5) * 0.115, 0.42 + row * 0.55, 0.9 + (i - 2.5) * 0.145], [0, -0.9, 0]);
-    lamp(g, [0.9, 2.2, 1.9], '#ffd28a', 0.8);
+    footing(g, 1.95, 16, o.id);
+    add(g, 'cyl', 'stone', '#d8cdb6', [3.7, 1.1, 3.7], [0, 0.6, 0]);                    // stone lower wall
+    for (let i = 0; i < 14; i++) { const a = (i / 14) * 6.283; add(g, 'round', 'stone', hsl(0.09, 0.14, 0.68 + (i % 3) * 0.05), [0.8, 0.45, 0.4], [Math.cos(a) * 1.82, 1.1, Math.sin(a) * 1.82], [0, -a + 1.57, 0]); }
+    add(g, 'cyl', 'matte', '#f5ead4', [3.4, 2.6, 3.4], [0, 2.4, 0]);                    // plaster upper wall
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283 + 0.39; add(g, 'box', 'wood', '#8f7252', [0.16, 2.6, 0.12], [Math.cos(a) * 1.7, 2.4, Math.sin(a) * 1.7], [0, -a, 0]); }
+    add(g, 'cyl', 'wood', '#8f7252', [3.56, 0.18, 3.56], [0, 1.2, 0]);
+    add(g, 'cyl', 'wood', '#8f7252', [3.7, 0.2, 3.7], [0, 3.72, 0]);
+    tiledCone(g, 2.35, 2.5, 3.75, 0.47);
+    add(g, 'sphere', 'metal', '#e6c35c', 0.22, [0, 6.75, 0]);
+    add(g, 'box', 'wood', '#9a6a48', [0.95, 1.5, 0.2], [0, 1.0, 1.8]);
+    add(g, 'cyl', 'wood', '#9a6a48', [0.95, 0.2, 0.95], [0, 1.72, 1.8], [Math.PI / 2, 0, 0]);
+    add(g, 'cyl', 'stone', '#cfc4ae', [1.25, 0.14, 1.25], [0, 1.72, 1.74], [Math.PI / 2, 0, 0]);
+    add(g, 'sphere', 'metal', '#e6c35c', 0.1, [0.3, 1.0, 1.93]);
+    for (const a of [-0.95, 0.95, 2.4, -2.4]) { glowPane(g, 'cyl', [0.62, 0.1, 0.62], [Math.sin(a) * 1.69, 2.6, Math.cos(a) * 1.69], [Math.PI / 2, 0, -a]); add(g, 'cyl', 'wood', '#8f7252', [0.8, 0.06, 0.8], [Math.sin(a) * 1.67, 2.6, Math.cos(a) * 1.67], [Math.PI / 2, 0, -a]); }
+    add(g, 'box', 'wood', '#a9825a', [1.4, 1.3, 0.4], [2.45, 0.85, 0.9], [0, -0.9, 0]);
+    const cols = ['#e58a8a', '#f2c66d', '#6fb7c2', '#b39ad6', '#8fc7a0', '#f0a878'];
+    for (let row = 0; row < 2; row++) for (let i = 0; i < 6; i++) add(g, 'box', 'matte', cols[(i + row * 2) % 6], [0.14, 0.4, 0.26], [2.45 + (i - 2.5) * 0.115, 0.62 + row * 0.55, 0.9 + (i - 2.5) * 0.145], [0, -0.9, 0]);
+    lamp(g, [0.9, 2.3, 2.0], '#ffd28a', 0.8);
     return g;
   },
   bench() {
@@ -263,6 +301,24 @@ export const builders = {
     const g = new THREE.Group(), r = seeded(o.id);
     for (let i = 0; i < 7; i++) add(g, i % 2 ? 'cone' : 'dome', 'glossy', ['#f6e7d8', '#f3c5c5', '#d6e5fa', '#fbe3b5'][i % 4], [0.22, 0.14, 0.2], [(r() - 0.5) * 2.4, 0.05, (r() - 0.5) * 2.4], [r(), r() * 3, r()]);
     g.userData.followGround = true;
+    return g;
+  },
+  // A low, curving dry-stone wall: params { radius, from, to } in radians around the object's position.
+  wall(o) {
+    const g = new THREE.Group(), r = seeded(o.id), { radius = 6, from = 0, to = 3 } = o.params;
+    const n = Math.max(4, Math.round(((to - from) * radius) / 0.5)), base = heightAt(o.x, o.z);
+    const mesh = new THREE.InstancedMesh(G.round, material('stone', '#ffffff'), n * 2);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), p = new THREE.Vector3(), c = new THREE.Color();
+    let k = 0;
+    for (let row = 0; row < 2; row++) for (let i = 0; i < n; i++) {
+      const a = from + ((i + row * 0.5) / n) * (to - from), rr = radius + (r() - 0.5) * 0.12, x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+      if (row === 1 && r() < 0.18) continue;
+      e.set((r() - 0.5) * 0.3, -a + (r() - 0.5) * 0.4, (r() - 0.5) * 0.3);
+      m.compose(p.set(x, heightAt(o.x + x, o.z + z) - base + 0.16 + row * 0.3, z), q.setFromEuler(e), sc.set(0.5 + r() * 0.22, 0.34 + r() * 0.1, 0.4 + r() * 0.12));
+      mesh.setMatrixAt(k, m); mesh.setColorAt(k, c.setHSL(0.08 + r() * 0.04, 0.12 + r() * 0.1, 0.64 + r() * 0.16)); k++;
+    }
+    mesh.count = k; mesh.castShadow = true; mesh.receiveShadow = true;
+    g.add(mesh); g.userData.noRotate = true;
     return g;
   },
   build_site() {

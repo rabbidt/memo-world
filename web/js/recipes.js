@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// Builds a mesh group from a "recipe": the list of simple shapes Memo wrote for something he made.
+// Builds a mesh group from a "recipe": the list of simple shapes Ash wrote for something he made.
 const GEO = {
   box: new THREE.BoxGeometry(1, 1, 1),
   sphere: new THREE.SphereGeometry(0.5, 24, 16),

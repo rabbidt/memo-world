@@ -1,4 +1,4 @@
-// Demo mode: with no API key (or MEMO_DEMO=1) Memo runs on these simple instincts instead of
+// Demo mode: with no API key (or MEMO_DEMO=1) Ash runs on these simple instincts instead of
 // Claude. It costs nothing and lets you see the island working before you add a key.
 import { get } from './db.js';
 import { getMemo, getZones } from './world.js';
@@ -35,7 +35,7 @@ const BIG = [
     P('cone', [2.4, 1.2, 2.4], [0, 4.3, 0], '#4f7a6a', 'matte'), P('cone', [0.5, 0.5, 0.5], [0, 3.3, 0], '#e6c35c', 'metal'),
     P('box', [0.6, 1.0, 0.1], [0, 0.5, 0.82], '#7a5236', 'wood')] }),
 ];
-const PET = (n) => ({ name: pick(['Pip', 'Dot', 'Mossbean', 'Tuft', 'Nib']), animation: 'none', parts: [
+const PET = (n) => ({ name: pick(['Pip', 'Dot', 'Bean', 'Tuft', 'Nib']), animation: 'none', parts: [
   P('sphere', [0.42, 0.34, 0.5], [0, 0.2, 0], pick(['#e9c46a', '#f4a261', '#a8dadc', '#cdb4db', '#f1faee']), 'matte'),
   P('sphere', [0.26, 0.24, 0.26], [0, 0.36, 0.2], '#f6efe0', 'matte'),
   P('sphere', [0.05, 0.06, 0.03], [0.07, 0.4, 0.32], '#22201c', 'glossy'), P('sphere', [0.05, 0.06, 0.03], [-0.07, 0.4, 0.32], '#22201c', 'glossy'),
@@ -77,7 +77,7 @@ export async function demoTick(actions) {
   actions.think({ words, english, mood: pick(['curious', 'content', 'dreamy', 'busy']) });
 }
 
-// The little machine that houses a program Memo wrote. Clicking it in the world opens the program.
+// The little machine that houses a program Ash wrote. Clicking it in the world opens the program.
 cannedRecipe.machine = (name, programId) => ({
   name, story: `A machine that runs my program "${name}".`, story_english: `A machine that runs my program "${name}".`,
   animation: 'none', big: false, program_id: programId, parts: [

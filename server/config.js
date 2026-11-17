@@ -24,7 +24,7 @@ export const config = {
   deepModel: process.env.MEMO_DEEP_MODEL || 'claude-sonnet-5-5',
   craftsPerDay: num(process.env.MEMO_CRAFTS_PER_DAY, 2),
   projectsPerDay: num(process.env.MEMO_PROJECTS_PER_DAY, 1),
-  // Memo's computer (read-only web search).
+  // Ash's computer (read-only web search).
   webSessionsPerDay: num(process.env.MEMO_WEB_SESSIONS_PER_DAY, 3),
   webSearchUsd: num(process.env.MEMO_WEB_SEARCH_USD, 0.01), // price of one web search
   wikiLookupsPerDay: num(process.env.MEMO_WIKI_LOOKUPS_PER_DAY, 6),
@@ -35,7 +35,7 @@ export const config = {
   programsPerDay: num(process.env.MEMO_PROGRAMS_PER_DAY, 1),
   githubToken: process.env.MEMO_GITHUB_TOKEN || '',
   githubRepo: process.env.MEMO_GITHUB_REPO || '', // for example rabbidt/memo-workshop
-  // When Memo may message the Keeper.
+  // When Ash may message the Keeper.
   keeperTz: process.env.MEMO_KEEPER_TZ || 'Europe/London',
   keeperFromHour: num(process.env.MEMO_KEEPER_FROM_HOUR, 9),
   keeperToHour: num(process.env.MEMO_KEEPER_TO_HOUR, 21),
@@ -46,7 +46,7 @@ export const config = {
   wakeMin: hhmm(process.env.MEMO_WAKETIME, 6 * 60 + 30),
 };
 
-// True when Memo should act on instinct instead of calling the API.
+// True when Ash should act on instinct instead of calling the API.
 export const demoMode = () => config.demo || !config.apiKeyPresent;
 
 // US dollars per million tokens: [input, output]. Checked November 2026.

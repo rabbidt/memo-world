@@ -1,4 +1,4 @@
-// A "recipe" is how Memo describes a thing it made: a handful of simple shapes the browser can build.
+// A "recipe" is how Ash describes a thing it made: a handful of simple shapes the browser can build.
 export const SHAPES = ['box', 'sphere', 'cylinder', 'cone', 'torus', 'capsule', 'gem', 'leaf'];
 export const MATERIALS = ['matte', 'glossy', 'metal', 'glass', 'glow', 'wood', 'stone', 'moss'];
 export const ANIMATIONS = ['none', 'bob', 'spin', 'sway', 'pulse'];
@@ -10,8 +10,8 @@ export const RECIPE_SCHEMA = {
   additionalProperties: false,
   required: ['name', 'story', 'story_english', 'parts', 'animation'],
   properties: {
-    name: { type: 'string', description: 'What Memo calls this thing. A few words.' },
-    story: { type: 'string', description: 'Two or three sentences in Memo\'s own voice (any style or invented words he likes): why it was made and what it means.' },
+    name: { type: 'string', description: 'What Ash calls this thing. A few words.' },
+    story: { type: 'string', description: 'Two or three sentences in Ash\'s own voice (any style or invented words he likes): why it was made and what it means.' },
     story_english: { type: 'string', description: 'The same story in plain, complete English.' },
     parts: {
       type: 'array',

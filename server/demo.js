@@ -6,4 +6,4 @@ const { seedApps, scanBooks } = await import('./computer.js');
 const { heartbeat } = await import('./brain.js');
 seedWorld(); seedApps(); scanBooks();
 for (let i = 0; i < 40; i++) await heartbeat(true);
-console.log('Memo has lived a pretend day. Run "npm start" to see what he did.');
+console.log('Ash has lived a pretend day. Run "npm start" to see what he did.');

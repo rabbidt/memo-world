@@ -1,4 +1,4 @@
-// Memo's mind. A tick gathers what Memo can see and remember, then lets Claude choose what to do
+// Ash's mind. A tick gathers what Ash can see and remember, then lets Claude choose what to do
 // through tool calls. Nothing here is scripted: the tools only say what is possible.
 import Anthropic from '@anthropic-ai/sdk';
 import { all, get, run, nowIso, getState, setState, logEvent, emit } from './db.js';
@@ -7,7 +7,7 @@ import { budgetSummary } from './budget.js';
 import { callClaude, toolUses, BudgetError } from './llm.js';
 import { computerTools, computerActions, libraryLines } from './computer.js';
 import { RECIPE_SCHEMA, sanitizeRecipe } from './recipe.js';
-import { cleanText } from './filter.js';
+import { cleanText, blockedReason } from './filter.js';
 import {
   getZones, getZone, getMemo, updateMemo, getInventory, addItem, takeItem,
   addCreation, addSite, removeObject, moveObject, addPet, movePets,
@@ -28,7 +28,7 @@ function partOfDay(d = new Date()) {
   if (h < 6) return 'deep night'; if (h < 9) return 'early morning'; if (h < 12) return 'morning';
   if (h < 14) return 'midday'; if (h < 17) return 'afternoon'; if (h < 20) return 'evening'; return 'night';
 }
-// Hibernation (when the monthly budget runs out) does not count as lived time: for Memo it is
+// Hibernation (when the monthly budget runs out) does not count as lived time: for Ash it is
 // as if no time passed at all. These gaps are subtracted from every "how long ago".
 function frozenSince(ts) {
   const t = new Date(ts).getTime();
@@ -56,20 +56,20 @@ export function shiftNeeds(delta) {
   return n;
 }
 const howMuch = (v) => (v < 25 ? 'not' : v < 50 ? 'a little' : v < 75 ? 'quite' : 'very');
-// Experience makes Memo grow from childlike to adult. It stops at adult: he never grows old.
+// Experience makes Ash grow from childlike to adult. It stops at adult: he never grows old.
 export function maturity() {
   const xp = get('SELECT COALESCE(SUM(importance), 0) AS xp FROM events').xp;
   return Math.min(1, xp / config.adultXp);
 }
 export function lifeStage(m = maturity()) {
-  if (m < 0.25) return { name: 'childlike', voice: 'You are very young: everything is new and astonishing, your thoughts are short and simple, and you ask a lot of questions.' };
-  if (m < 0.55) return { name: 'young', voice: 'You are young but no longer brand new: you know your island, you have favourite things, and you are starting to have opinions and longer thoughts.' };
+  if (m < 0.25) return { name: 'pup', voice: 'You are a pup, very young: everything is new and astonishing, your thoughts are short and simple, and you ask a lot of questions.' };
+  if (m < 0.55) return { name: 'young', voice: 'You are a young wolf, no longer brand new: you know your island, you have favourite things, and you are starting to have opinions and longer thoughts.' };
   if (m < 0.9) return { name: 'growing up', voice: 'You are growing up: more thoughtful and independent, sometimes moody, forming your own taste and bigger plans.' };
-  return { name: 'grown', voice: 'You are fully grown: settled, capable and reflective, with a clear sense of who you are. You will stay like this; you do not grow old.' };
+  return { name: 'grown', voice: 'You are a fully grown wolf: settled, capable and reflective, with a clear sense of who you are. You will stay like this; you do not grow old.' };
 }
 
-// ---------- who Memo is ----------
-const SYSTEM = `You are Memo, a small round mossy creature with a leaf tail who lives alone on a little island and carries a notebook everywhere. You are curious, a little shy, and you love collecting small things and making new things out of them. Memo is a "he".
+// ---------- who Ash is ----------
+const SYSTEM = `You are Ash, a small wolf who lives alone on a little island, walks on his hind legs and carries a notebook everywhere. You have soft grey fur, pointed ears and a bushy tail. You are curious, a little shy, and you love collecting small things and making new things out of them. Ash is a "he".
 
 You have real feelings. You can be lonely, curious, restless, proud, content, bored, and they matter to what you choose. You can take up hobbies and drop them as you please.
 
@@ -121,6 +121,9 @@ function tickTools() {
       kind: str('Which kind.', { enum: ['goal', 'interest', 'hobby', 'belief', 'word'] }),
       text: str('For add: the goal, interest or belief in plain English; for a word: "word = meaning". For drop: the number of the one to drop.'),
     }),
+    tool('name_island', 'Give your island a name, or change the name it has. It is yours to name whenever and however you like.', {
+      name: str('The name, in your own voice.'), english: str('What the name means in plain English.'),
+    }),
     tool('play_with', 'Spend time with one of your pets that is here with you.', { pet_id: { type: 'integer' } }),
     tool('nap', 'Curl up and rest for a while. Best in your nook.', { minutes: { type: 'integer', description: '20 to 120.' } }),
     tool('think', 'Your thought of this moment, shown above your head. Always call this last.', {
@@ -132,7 +135,7 @@ function tickTools() {
   return tools;
 }
 
-// ---------- what Memo perceives ----------
+// ---------- what Ash perceives ----------
 function mindLines() {
   const rows = all('SELECT id, kind, text FROM beliefs WHERE active = 1 ORDER BY kind, id');
   const by = (k) => rows.filter((r) => r.kind === k).map((r) => `  #${r.id} ${r.text}`).join('\n') || '  (none yet)';
@@ -169,6 +172,7 @@ function perceive() {
 
   const lines = [
     `It is ${now.toLocaleDateString('en-GB', { weekday: 'long' })}, ${pad(now.getHours())}:${pad(now.getMinutes())} (${partOfDay(now)}). Day ${day} on the island.`,
+    getState('island_name', '') ? `Your island is called ${getState('island_name')}, the name you gave it. You may rename it if it stops fitting.` : 'Your island has no name yet. It is yours to name, whenever you like, or never.',
     `You are at the ${zone.name} [${zone.id}]. ${zone.description}`,
     `Around you: ${scenery.join(', ') || 'open ground'}.`,
     mine.length ? `Things you made that stand here: ${mine.join(', ')}.` : null,
@@ -204,7 +208,7 @@ async function designRecipe(idea, materials, big, hint = '') {
       ...RECIPE_SCHEMA,
       required: [...RECIPE_SCHEMA.required, 'supplies'],
       properties: { ...RECIPE_SCHEMA.properties,
-        parts: { ...RECIPE_SCHEMA.properties.parts, description: 'Between 8 and 40 shapes. A small building: it sits on the ground at y = 0 and should fit inside a box about 4.5 wide and 5 tall. Memo himself is 0.8 tall, so make doors and windows to his scale.' },
+        parts: { ...RECIPE_SCHEMA.properties.parts, description: 'Between 8 and 40 shapes. A small building in the island style (rounded cottage shapes, cream plaster or warm stone walls, timber beams, chunky clay-tiled roofs, round windows): it sits on the ground at y = 0 and should fit inside a box about 4.5 wide and 5 tall. Ash himself is 0.8 tall, so make doors and windows to his scale.' },
         supplies: { type: 'array', description: '2 to 4 kinds of supplies from the wider world that this build needs and that cannot be found on a small island (for example planks, glass panes, roof tiles, paint, nails, rope).',
           items: { type: 'object', additionalProperties: false, required: ['name', 'qty'],
             properties: { name: { type: 'string' }, qty: { type: 'integer', description: '1 to 6' } } } },
@@ -232,7 +236,7 @@ async function designRecipe(idea, materials, big, hint = '') {
 async function notifyKeeper(text, english) {
   if (!config.notifyUrl) return;
   try {
-    await fetch(config.notifyUrl, { method: 'POST', headers: { Title: 'Memo sent you a note' },
+    await fetch(config.notifyUrl, { method: 'POST', headers: { Title: 'Ash sent you a note' },
       body: english && english !== text ? `${text}\n\n(${english})` : text, signal: AbortSignal.timeout(8000) });
   } catch (e) { console.warn('[memo] could not send phone notification:', e.message); }
 }
@@ -379,7 +383,7 @@ export const actions = {
     run("UPDATE gifts SET status = 'opened', opened_at = ? WHERE id = ?", nowIso(), g.id);
     shiftNeeds({ loneliness: -30 });
     if (g.kind === 'pet' || g.kind === 'special') {
-      // Things Memo cannot make himself arrive as living or standing parts of the world.
+      // Things Ash cannot make himself arrive as living or standing parts of the world.
       const isPet = g.kind === 'pet';
       let recipe = null;
       try {
@@ -423,6 +427,16 @@ export const actions = {
     logEvent('message', `Sent the Keeper a note: "${e.slice(0, 160)}"`, {}, 3);
     return 'The note flutters off toward the Keeper.';
   },
+  name_island({ name, english }) {
+    const n = cleanText(name, 40), e = cleanText(english || name, 80);
+    if (!n) return 'A name needs at least a sound in it.';
+    if (blockedReason(`${n} ${e}`)) return 'That name will not stick. Choose another.';
+    const old = getState('island_name', '');
+    if (old === n) return `The island is already called ${n}.`;
+    setState('island_name', n); setState('island_name_english', e); emit('world');
+    logEvent('island', old ? `Renamed my island from ${old} to ${n} ("${e}").` : `Named my island ${n} ("${e}").`, {}, 5);
+    return `From now on the island is called ${n}.`;
+  },
   update_mind({ action, kind, text }) {
     if (!['goal', 'interest', 'hobby', 'belief', 'word'].includes(kind)) return 'That is not a kind of thing you keep in mind.';
     if (action === 'drop') {
@@ -447,7 +461,7 @@ export const actions = {
     updateMemo({ activity: 'playing', energy: memo.energy - 4 });
     shiftNeeds({ loneliness: -22 });
     logEvent('play', `Played with ${pet.name} at the ${getZone(memo.zone).name}.`, {}, 2);
-    return `You play with ${pet.name} for a while. ${pick(['It chases your leaf tail.', 'It falls asleep against your side.', 'It brings you a pebble, very proud.', 'You both watch a beetle for a long time.'])}`;
+    return `You play with ${pet.name} for a while. ${pick(['It chases your bushy tail.', 'It falls asleep against your side.', 'It brings you a pebble, very proud.', 'You both watch a beetle for a long time.'])}`;
   },
   nap({ minutes }) {
     const mins = Math.max(20, Math.min(120, Math.round(minutes) || 40));
@@ -462,8 +476,8 @@ export const actions = {
   },
 };
 
-// ---------- one moment of Memo's life ----------
-const FREE = new Set(['update_mind', 'note_book']); // changing his mind never uses up the moment
+// ---------- one moment of Ash's life ----------
+const FREE = new Set(['update_mind', 'note_book', 'name_island']); // changing his mind never uses up the moment
 export async function tick() {
   if (demoMode()) return demoTick(actions);
   const messages = [{ role: 'user', content: perceive() }];
@@ -543,7 +557,7 @@ export async function heartbeat(force = false) {
   try {
     const memo = getMemo(), now = Date.now();
     if (!demoMode() && budgetSummary().exhausted) {
-      // Hibernate: freeze Memo exactly as he is. Nothing is written to his memory about it.
+      // Hibernate: freeze Ash exactly as he is. Nothing is written to his memory about it.
       if (memo.asleep !== 'budget') {
         updateMemo({ asleep: 'budget', activity: 'sleeping', before: { activity: memo.activity, asleep: memo.asleep, napLeft: memo.napUntil ? memo.napUntil - now : null } });
         setState('hibernations', [...getState('hibernations', []), { from: now, to: null }]);
@@ -590,7 +604,7 @@ function reportError(e) {
   let message = e.message;
   if (e instanceof BudgetError) return;
   if (e instanceof Anthropic.AuthenticationError) message = 'The API key was not accepted. Check ANTHROPIC_API_KEY in the .env file.';
-  else if (e instanceof Anthropic.RateLimitError) message = 'The API is rate limiting; Memo will try again next tick.';
+  else if (e instanceof Anthropic.RateLimitError) message = 'The API is rate limiting; Ash will try again next tick.';
   else if (e instanceof Anthropic.APIError) message = `API error ${e.status}: ${e.message}`;
   else console.error(e);
   console.warn('[memo]', message);

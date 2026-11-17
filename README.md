@@ -1,6 +1,6 @@
-# Memo's Island
+# Ash's Island
 
-Memo is a small, round, mossy creature with a leaf tail and a notebook. He lives on a little
+Ash is a small wolf who walks on his hind legs and carries a notebook. He lives on a little
 3D island, and nobody tells him what to do. Every few minutes he looks around, remembers, and
 decides for himself: wander, gather, make things, write, wish for things, read, or nap.
 
@@ -13,13 +13,13 @@ the supplies his bigger building plans need.
 2. Double-click `start.bat`. The first run installs what it needs and creates a `.env` file.
 3. Open the **Keeper link** printed in the window. Keep that link private: it is your key.
 
-With no API key Memo runs in **demo mode** on simple instincts, which is free and lets you check
+With no API key Ash runs in **demo mode** on simple instincts, which is free and lets you check
 everything works. To wake his real mind, put an [Anthropic API key](https://console.anthropic.com/)
 in `.env` as `ANTHROPIC_API_KEY=...` and start it again. Leave the window open: while it is
-running, Memo is living. `npm run demo` fills a fresh island with a pretend day if you want
+running, Ash is living. `npm run demo` fills a fresh island with a pretend day if you want
 something to look at straight away.
 
-## What Memo can do
+## What Ash can do
 
 | | |
 |---|---|
@@ -29,19 +29,20 @@ something to look at straight away.
 | **Speak his own way** | He may invent words or a whole language. Everything he says also carries plain English, shown underneath (the *English* button hides it). On his computer he always types English. |
 | **Make** | Small objects made of simple shapes that stay in the world for good, each with a story. |
 | **Build a town** | He plans bigger buildings, stakes out a site, and pins the supplies he needs to the notice board. When you have sent them all, he builds. |
+| **Name** | The island has no name until Ash gives it one. He can name it whenever he likes and rename it later; the page title follows. |
 | **Wish** | For anything he cannot make: items, special objects, even a pet. Pets live on the island and follow him about. |
 | **Write** | A journal, a nightly reflection, margin notes in books, and longer documents in his text editor. |
 | **Read** | Books you put in the `books` folder (`.epub`, `.txt`, `.md`), a few pages at a time with a bookmark. |
 | **Use his computer** | Five apps: Claude, Wikipedia, a read-only browser, GitHub (his own repo) and a text editor. |
 | **Write programs** | Little games, toys and tools that appear as machines in the world for him and visitors to use. |
 | **Talk to you** | Up to three notes a day, only between 9am and 9pm UK time. You can reply from the Notes tab. |
-| **Grow up** | Experience takes him from childlike to grown, changing how he thinks and looks. He stops at adult and never grows old. |
+| **Grow up** | Experience takes him from pup to grown wolf, changing how he thinks and looks. He stops at adult and never grows old. |
 
 ## What it costs
 
 There is a hard cap, `MEMO_MONTHLY_CAP_USD` (default **$10** a month). Every call to Claude is
 checked against it first, using the worst case for that call, and recorded afterwards. When the
-month's budget is spent Memo **hibernates**: he is frozen exactly as he is, nothing is written to
+month's budget is spent Ash **hibernates**: he is frozen exactly as he is, nothing is written to
 his memory, and when the next month starts he carries on as if no time had passed.
 
 Routine moments use Claude Haiku 5.5 ($0.10 / $0.50 per million tokens); crafting, building plans,
@@ -81,7 +82,7 @@ is a free [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare
 `cloudflared tunnel --url http://localhost:4477`, then share `https://<the-address>/?k=<visitor token>`.
 Never share your own Keeper link.
 
-To get Memo's notes on your phone, install the free [ntfy](https://ntfy.sh) app, choose a
+To get Ash's notes on your phone, install the free [ntfy](https://ntfy.sh) app, choose a
 hard-to-guess topic name, and set `MEMO_NOTIFY_URL=https://ntfy.sh/that-topic`.
 
 ## How it is built
@@ -89,7 +90,7 @@ hard-to-guess topic name, and set `MEMO_NOTIFY_URL=https://ntfy.sh/that-topic`.
 ```
 server/   Node.js, no build step
   index.js     web server, Keeper and visitor access, live updates
-  brain.js     Memo's mind: what he perceives, his tools, the tick, nightly reflection
+  brain.js     Ash's mind: what he perceives, his tools, the tick, nightly reflection
   computer.js  his five apps, the audit log, documents and books
   llm.js       every Claude call, checked against the cap
   budget.js    prices and the monthly cap
@@ -99,7 +100,7 @@ server/   Node.js, no build step
 web/      Three.js (WebGPU, falling back to WebGL 2), no build step
   js/main.js   scene, sky, day and night, effects
   js/builders.js  one builder per kind of object
-  js/memo.js   Memo himself
+  js/memo.js   Ash himself
   js/ui.js     the side panel
 data/     memo.db, his whole life. Back this file up.
 books/    your ebooks for his library (never committed, never shown to visitors)

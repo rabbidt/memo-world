@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS zones (
   x REAL NOT NULL, z REAL NOT NULL, radius REAL NOT NULL,
   gatherables TEXT NOT NULL DEFAULT '[]'
 );
--- Everything standing in the world: scenery, buildings, and Memo's creations.
+-- Everything standing in the world: scenery, buildings, and Ash's creations.
 CREATE TABLE IF NOT EXISTS objects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   zone_id TEXT, kind TEXT NOT NULL, name TEXT,
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS projects (
   recipe TEXT NOT NULL, supplies TEXT NOT NULL,                   -- supplies: [{name, qty, have}]
   site_object_id INTEGER, built_object_id INTEGER, built_at TEXT
 );
--- The audit of everything Memo does on his computer. Append-only: the triggers below make
--- changing or deleting a row impossible, for Memo and for everyone else.
+-- The audit of everything Ash does on his computer. Append-only: the triggers below make
+-- changing or deleting a row impossible, for Ash and for everyone else.
 CREATE TABLE IF NOT EXISTS audit (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, app TEXT NOT NULL, action TEXT NOT NULL,
   query TEXT NOT NULL, reason TEXT, status TEXT NOT NULL, summary TEXT,
@@ -74,16 +74,16 @@ CREATE TABLE IF NOT EXISTS audit (
 );
 CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit BEGIN SELECT RAISE(ABORT, 'the audit log is append-only'); END;
 CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit BEGIN SELECT RAISE(ABORT, 'the audit log is append-only'); END;
--- The apps on Memo's computer. Only the Keeper can switch one on or off.
+-- The apps on Ash's computer. Only the Keeper can switch one on or off.
 CREATE TABLE IF NOT EXISTS apps (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1
 );
--- Longer things Memo writes in his text editor.
+-- Longer things Ash writes in his text editor.
 CREATE TABLE IF NOT EXISTS documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, updated_at TEXT NOT NULL, title TEXT NOT NULL,
   body TEXT NOT NULL, english TEXT
 );
--- Books from the Keeper's own collection (the books folder), and Memo's place and notes in them.
+-- Books from the Keeper's own collection (the books folder), and Ash's place and notes in them.
 CREATE TABLE IF NOT EXISTS books (
   id INTEGER PRIMARY KEY AUTOINCREMENT, file TEXT UNIQUE NOT NULL, title TEXT NOT NULL, chars INTEGER NOT NULL,
   position INTEGER NOT NULL DEFAULT 0, started_at TEXT, finished_at TEXT, added_at TEXT NOT NULL
@@ -96,12 +96,12 @@ CREATE TABLE IF NOT EXISTS book_notes (
 CREATE TABLE IF NOT EXISTS invites (
   token TEXT PRIMARY KEY, label TEXT NOT NULL, created_at TEXT NOT NULL, revoked INTEGER NOT NULL DEFAULT 0
 );
--- Programs and games Memo writes at his computer. They only ever run in a browser sandbox.
+-- Programs and games Ash writes at his computer. They only ever run in a browser sandbox.
 CREATE TABLE IF NOT EXISTS programs (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, name TEXT NOT NULL, kind TEXT NOT NULL,
   description TEXT, english TEXT, html TEXT NOT NULL, object_id INTEGER, commit_url TEXT, plays INTEGER NOT NULL DEFAULT 0
 );
--- Notes between Memo and the Keeper.
+-- Notes between Ash and the Keeper.
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, sender TEXT NOT NULL, text TEXT NOT NULL, english TEXT,
   seen INTEGER NOT NULL DEFAULT 0

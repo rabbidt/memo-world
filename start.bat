@@ -1,5 +1,5 @@
 @echo off
-rem Double-click this file to start Memo's island.
+rem Double-click this file to start Ash's island.
 cd /d "%~dp0"
 where node >nul 2>nul
 if errorlevel 1 (
