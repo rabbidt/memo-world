@@ -6,6 +6,7 @@ import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
 import { api, stream, params } from './api.js';
 import { initUI } from './ui.js';
+import { loadLayout, buildDressing, registerGlow, addLamp, LANDMARKS } from './dressing.js';
 
 const canvas = document.getElementById('scene');
 const bubble = document.getElementById('bubble');
@@ -34,7 +35,7 @@ const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors: t
 scene.add(sky);
 const hemi = new THREE.HemisphereLight('#dff1ff', '#6f8f5a', 1.0); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff3d6', 3);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.radius = 3; // wide, soft-edged shadows
 Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 48, bottom: -48, near: 1, far: 260 });
 sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.06;
 scene.add(sun, sun.target);
@@ -107,7 +108,7 @@ function applyTime() {
   for (const l of lamps) { l.light.intensity = night * 22 * l.power; l.bulb.material.emissiveIntensity = 0.15 + night * 3; }
   for (const g of glows) g.material.emissiveIntensity = 0.1 + night * 2.4;
   flies.visible = night > 0.4;
-  renderer.toneMappingExposure = 1.0 - night * 0.04;
+  renderer.toneMappingExposure = 1.12 - night * 0.14;
   seaFloor.material.color.copy(mix(K('#0f2440'), K('#4fa9b0'), day));
 }
 
@@ -119,8 +120,13 @@ const pickable = [];
 function placeObject(o) {
   const build = builders[o.kind];
   if (!build && !models[o.kind]) return; // a kind with neither a built-in shape nor a model is left out
+  // With the hand-made models in use, their layout already dresses the nine designed places and the scenery.
+  const designed = !o.zone_id || DESIGNED[o.zone_id];
+  if (dressed && designed && (o.created_by === 'world' || o.created_by === 'layout') && (dressed.kinds.has(o.kind) || o.kind === 'wall') && !LANDMARKS.has(o.kind)) return;
+  const lay = dressed && LANDMARKS.has(o.kind) && dressed.items.find((it) => it.name === o.kind && it.home === o.zone_id);
+  if (lay) o = { ...o, x: lay.x, z: lay.z, rot: lay.rotY, scale: lay.scale };
   let g;
-  if (models[o.kind]) { g = new THREE.Group(); g.add(models[o.kind].clone(true)); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
+  if (models[o.kind]) { g = new THREE.Group(); const copy = models[o.kind].clone(true); g.add(copy); addLamp(g, copy); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
   else g = build(o);
   g.position.set(o.x, heightAt(o.x, o.z), o.z);
   if (!g.userData.noRotate) g.rotation.y = o.rot || 0;
@@ -270,6 +276,25 @@ async function setupEffects() {
 // as {"models":[{"name":"library_tower","file":"library_tower.glb"}]}. The name is the object's kind,
 // or memo_pup / memo_young / memo_growing_up / memo_grown for Ash himself.
 const models = {};
+let dressed = null; // { items, kinds } once the layout of hand-made models is in use
+// The model layout was composed around these nine places. The Keeper's starting layout (world/island-layout.xlsx)
+// can move or remove them, so each dressing item near one of them follows it, or goes when it goes.
+const DESIGNED = { board: [0, 0, 4.5], nook: [-9, 9, 5], garden: [11, 9, 6.5], workshop: [15, -8, 6], library: [-2, -17, 5.5],
+  pond: [-16, -6, 7], meadow: [4, 21, 6.5], shore: [-24, 17, 6], lookout: [22, -21, 5.5] };
+const SHEET_KINDS = ['tree', 'pine', 'rock', 'bush', 'mushrooms', 'lantern', 'bench', 'stump', 'signpost'];
+function fitDressing(items, zones, objects) {
+  const now = Object.fromEntries(zones.map((z) => [z.id, z])), starting = new Set(objects.filter((o) => o.created_by !== 'memo').map((o) => o.kind));
+  const out = [];
+  for (const it of items) {
+    if (SHEET_KINDS.includes(it.name) && !starting.has(it.name)) continue; // the Keeper switched every one of these off
+    let home = null, best = 1.25;
+    for (const [id, [x, z, r]] of Object.entries(DESIGNED)) { const d = Math.hypot(it.x - x, it.z - z) / r; if (d < best) { best = d; home = id; } }
+    if (!home) { out.push(it); continue; }
+    if (!now[home]) continue;
+    out.push({ ...it, home, x: it.x + now[home].x - DESIGNED[home][0], z: it.z + now[home].z - DESIGNED[home][1] });
+  }
+  return out;
+}
 async function loadModels() {
   let manifest;
   try { const r = await fetch('/assets/models/manifest.json'); if (!r.ok) return; manifest = await r.json(); } catch { return; }
@@ -279,6 +304,7 @@ async function loadModels() {
     try {
       const gltf = await loader.loadAsync(`/assets/models/${m.file}`);
       gltf.scene.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      if (!m.name.startsWith('memo_')) registerGlow(gltf.scene);
       models[m.name.replace(/^ash_/, 'memo_').replace('memo_childlike', 'memo_pup')] = gltf.scene;
     } catch (e) { console.warn(`Could not load model ${m.file}; using the built-in shape.`, e); }
   }));
@@ -292,8 +318,15 @@ async function start() {
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
   setTerrain(data.terrain);
-  scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones), buildCobbles(data.zones));
   await loadModels();
+  const layout = params.get('models') === '0' ? null : await loadLayout();
+  if (layout && layout.some((it) => models[it.name])) {
+    const items = fitDressing(layout, data.zones, data.objects);
+    dressed = { items, kinds: new Set(items.filter((it) => models[it.name]).map((it) => it.name)) };
+  }
+  if (params.get('models') === '0') for (const k of Object.keys(models)) delete models[k];
+  scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones));
+  scene.add(dressed ? buildDressing(dressed.items, models) : buildCobbles(data.zones));
   for (const o of data.objects) placeObject(o);
   world.memo.models = Object.fromEntries(Object.entries(models).filter(([k]) => k.startsWith('memo_')));
   world.memo.setState(data.memo);

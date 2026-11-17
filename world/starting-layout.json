@@ -535,10 +535,8 @@
    "x": 0,
    "z": 0,
    "facing": 0,
-   "scale": 1,
-   "params": {
-    "radius": 1.8
-   }
+   "scale": 0.4,
+   "params": {}
   },
   {
    "kind": "bridge",
