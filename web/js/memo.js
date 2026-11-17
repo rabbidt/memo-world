@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { heightAt } from './terrain.js';
+import { walkHeightAt as heightAt } from './terrain.js';
 
 // Ash himself: a small wolf who walks upright and carries a notebook. This is the built-in
 // fallback shape; a hand-made model listed in web/assets/models/manifest.json replaces it.

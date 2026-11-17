@@ -31,6 +31,7 @@ something to look at straight away.
 | **Build a town** | He plans bigger buildings, stakes out a site, and pins the supplies he needs to the notice board. When you have sent them all, he builds. |
 | **Name** | The island has no name until Ash gives it one. He can name it whenever he likes and rename it later; the page title follows. |
 | **Seasons** | The sky follows the real sun and moon over London (sunrise, sunset, moon phase), and the date sets the season. Ash senses it, finds different things through the year, and his garden rests in winter. At the observatory he can stargaze after dark, and at the campfire circle he can sit by a fire in the evening. |
+| **Water** | A stream rises on the hill, drops over a waterfall into a plunge pool and runs under the bridge to the pond. Its route is the `stream` row in the layout; the channel is cut into the ground to follow it. |
 | **Travel** | He can pin a wish to travel. You answer it in the Wishes tab by promising a new place; it is recorded as an area to build, and he is told it will open in time. |
 | **Wish** | For anything he cannot make: items, special objects, even a pet. Pets live on the island and follow him about. |
 | **Write** | A journal, a nightly reflection, margin notes in books, and longer documents in his text editor. |

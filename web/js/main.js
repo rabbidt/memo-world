@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, setTerrain, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
+import { heightAt, baseHeightAt, streamDistance, setTerrain, setSeason, setStream, buildStream, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
 import { builders, lamps, glows } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
@@ -76,6 +76,33 @@ const flies = new THREE.InstancedMesh(new THREE.SphereGeometry(0.06, 6, 4), new 
 const flySeeds = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r: 2 + Math.random() * 7, y: 0.6 + Math.random() * 2, s: 0.3 + Math.random() * 0.6, home: Math.random() < 0.6 ? 'pond' : 'meadow' }));
 scene.add(flies);
 
+// ---------- falling leaves and snow ----------
+let weather = null;
+function buildWeather() {
+  const snowing = SEASON.snow, count = snowing ? 900 : Math.round(SEASON.falling * 320);
+  if (!count) return;
+  const geo = snowing ? new THREE.SphereGeometry(0.045, 5, 4) : new THREE.PlaneGeometry(0.16, 0.11);
+  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, side: THREE.DoubleSide }), count);
+  const c = new THREE.Color(), bits = [];
+  for (let i = 0; i < count; i++) {
+    bits.push({ x: (Math.random() - 0.5) * 80, z: (Math.random() - 0.5) * 80, y: Math.random() * 14, v: snowing ? 0.7 + Math.random() * 0.6 : 0.5 + Math.random() * 0.7, ph: Math.random() * 6.28 });
+    mesh.setColorAt(i, snowing ? c.set('#ffffff') : c.setHSL(0.03 + Math.random() * 0.1, 0.75, 0.48 + Math.random() * 0.12));
+  }
+  mesh.frustumCulled = false; scene.add(mesh);
+  weather = { mesh, bits, snowing };
+}
+const wm = new THREE.Matrix4(), wq = new THREE.Quaternion(), we = new THREE.Euler(), wv = new THREE.Vector3(), ws = new THREE.Vector3(1, 1, 1);
+function updateWeather(dt, t) {
+  if (!weather) return;
+  weather.bits.forEach((b, i) => {
+    b.y -= b.v * dt; b.x += Math.sin(t * 0.7 + b.ph) * dt * 0.5; b.z += Math.cos(t * 0.5 + b.ph) * dt * 0.3;
+    if (b.y < heightAt(b.x, b.z)) { b.y = 10 + Math.random() * 5; b.x = controls.target.x + (Math.random() - 0.5) * 80; b.z = controls.target.z + (Math.random() - 0.5) * 80; }
+    wm.compose(wv.set(b.x, b.y, b.z), wq.setFromEuler(we.set(t * 1.3 + b.ph, t * 0.9 + b.ph, b.ph)), ws);
+    weather.mesh.setMatrixAt(i, wm);
+  });
+  weather.mesh.instanceMatrix.needsUpdate = true;
+}
+
 // ---------- time of day ----------
 // The sky follows the real sun, moon and season over London. ?hour=16.5 and ?date=2026-04-20 preview other moments.
 const forcedHour = params.get('hour') !== null ? Number(params.get('hour')) : null;
@@ -88,6 +115,9 @@ function skyDate() {
 const toDir = (p) => { const el = p.elevation * Math.PI / 180, az = p.azimuth * Math.PI / 180; return new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)); };
 const SEASON = season(skyDate());
 if (SEASON.frost && skyDate().getHours() >= 10) SEASON.frost = 0; // frost is gone by mid-morning
+if (params.get('snow') === '1') SEASON.snow = true; // ?snow=1 and ?frost=1 preview the weather
+if (params.get('frost') === '1') SEASON.frost = 1;
+setSeason(SEASON);
 const K = (h) => new THREE.Color(h), mix = (a, b, t) => a.clone().lerp(b, Math.min(1, Math.max(0, t)));
 const SKY = { dayTop: K('#74aee0'), dayLow: K('#f4dfc2'), duskTop: K('#6f74b5'), duskLow: K('#ffbf8f'), nightTop: K('#0c1230'), nightLow: K('#27365f') };
 let night = 0;
@@ -133,9 +163,12 @@ function applyTime() {
 const world = { zones: [], objects: new Map(), memo: new Ash(), parcels: [], data: null };
 scene.add(world.memo.root);
 const pickable = [];
+const SCENERY = new Set(['tree', 'pine', 'rock', 'bush', 'mushrooms', 'flower_patch', 'lantern', 'bench', 'stump', 'wall']);
 
 function placeObject(o) {
+  if (o.kind === 'stream') { if (!world.stream) { world.stream = buildStream(); scene.add(world.stream); } return; }
   const build = builders[o.kind];
+  if (SCENERY.has(o.kind) && o.created_by !== 'memo' && streamDistance(o.x, o.z) < 2.2) return; // nothing grows in the water
   if (!build && !models[o.kind]) return; // a kind with neither a built-in shape nor a model is left out
   // With the hand-made models in use, their layout already dresses the nine designed places and the scenery.
   const designed = !o.zone_id || DESIGNED[o.zone_id];
@@ -145,7 +178,7 @@ function placeObject(o) {
   let g;
   if (models[o.kind]) { g = new THREE.Group(); const copy = models[o.kind].clone(true); g.add(copy); addLamp(g, copy); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
   else g = build(o);
-  g.position.set(o.x, heightAt(o.x, o.z), o.z);
+  g.position.set(o.x, o.kind === 'bridge' ? baseHeightAt(o.x, o.z) + 0.1 : heightAt(o.x, o.z), o.z);
   if (!g.userData.noRotate) g.rotation.y = o.rot || 0;
   if (o.kind !== 'creation' && o.kind !== 'pet') g.scale.setScalar(o.scale || 1);
   if (g.userData.followGround) {
@@ -216,6 +249,7 @@ function frame() {
     if (g.userData.water) g.userData.water.position.y = 0.38 + Math.sin(t * 0.8) * 0.015;
     if (g.userData.pet) updatePet(g, dt, t);
   }
+  updateWeather(dt, t);
   sea.position.y = Math.sin(t * 0.5) * 0.06;
   for (const c of clouds.children) { c.position.x += c.userData.speed * dt; if (c.position.x > 150) c.position.x = -150; }
   if (flies.visible) flySeeds.forEach((f, i) => {
@@ -335,6 +369,23 @@ async function start() {
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
   setTerrain(data.terrain);
+  { // the stream runs through the places its row in the layout names
+    const row = data.objects.find((o) => o.kind === 'stream'), zone = (id) => data.zones.find((z) => z.id === String(id).trim());
+    if (row) {
+      const stops = [row.params.from, ...String(row.params.via || '').split(','), row.params.to].map(zone).filter(Boolean);
+      const fallZone = data.objects.find((o) => o.kind === 'waterfall')?.zone_id, end = stops.at(-1), first = stops[0], next = stops[1];
+      const route = stops.map((z) => ({ x: z.x, z: z.z, id: z.id }));
+      if (route.length > 1) {
+        const pull = (p, toward, by) => { const d = Math.hypot(toward.x - p.x, toward.z - p.z) || 1; p.x += ((toward.x - p.x) / d) * by; p.z += ((toward.z - p.z) / d) * by; };
+        pull(route[0], next, 2.6); // the spring rises just off the summit
+        const pondObj = data.objects.find((o) => o.kind === 'pond' && o.zone_id === end.id);
+        if (pondObj) pull(route.at(-1), route.at(-2), 4.4 * (pondObj.scale || 1));
+        setStream(route, { width: Number(row.params.width) || 1.2, waterfall: route.find((p) => p.id === fallZone) || null,
+          endLevel: pondObj ? baseHeightAt(end.x, end.z) + 0.04 : -Infinity,
+          bridgeSpots: data.objects.filter((o) => o.kind === 'bridge').map((o) => ({ x: o.x, z: o.z })) });
+      }
+    }
+  }
   await loadModels();
   const layout = params.get('models') === '0' ? null : await loadLayout();
   if (layout && layout.some((it) => models[it.name])) {
@@ -343,7 +394,8 @@ async function start() {
   }
   if (params.get('models') === '0') for (const k of Object.keys(models)) delete models[k];
   scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones));
-  scene.add(dressed ? buildDressing(dressed.items, models) : buildCobbles(data.zones));
+  scene.add(dressed ? buildDressing(dressed.items.filter((it) => streamDistance(it.x, it.z) > (it.name === 'path_stones' ? 1.4 : 2.2)), models, SEASON) : buildCobbles(data.zones));
+  buildWeather();
   for (const o of data.objects) placeObject(o);
   world.memo.models = Object.fromEntries(Object.entries(models).filter(([k]) => k.startsWith('memo_')));
   world.memo.setState(data.memo);

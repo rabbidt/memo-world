@@ -250,6 +250,57 @@ export const builders = {
     lamp(g, [0.9, 2.3, 2.0], '#ffd28a', 0.8);
     return g;
   },
+  // ---- stand-ins for places whose hand-made models have not arrived yet ----
+  bridge() {
+    const g = new THREE.Group(), span = 5.2, n = 13;
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n - 0.5, y = 0.42 * Math.cos(t * Math.PI) + 0.02;
+      add(g, 'box', 'wood', i % 2 ? '#a9825a' : '#b98f63', [1.5, 0.1, span / n * 0.94], [0, y, t * span], [-Math.sin(t * Math.PI) * 0.3, 0, 0]);
+    }
+    for (const x of [-0.72, 0.72]) {
+      for (const t of [-0.46, -0.16, 0.16, 0.46]) add(g, 'cyl', 'wood', '#7d6348', [0.11, 0.85, 0.11], [x, 0.42 * Math.cos(t * Math.PI) + 0.42, t * span]);
+      for (let i = 0; i < 6; i++) { const t = (i + 0.5) / 6 - 0.5; add(g, 'box', 'wood', '#8f7252', [0.08, 0.08, span / 6 * 1.02], [x, 0.42 * Math.cos(t * Math.PI) + 0.8, t * span], [-Math.sin(t * Math.PI) * 0.3, 0, 0]); }
+    }
+    for (const z of [-span / 2, span / 2]) for (const x of [-0.9, 0.9]) add(g, 'rock', 'stone', '#b9b3a3', [0.7, 0.5, 0.6], [x, 0.05, z]);
+    return g;
+  },
+  waterfall(o) {
+    const g = new THREE.Group(), r = seeded(o.id || 3);
+    for (let i = 0; i < 9; i++) { const a = (i / 9) * 6.283, d = 1.6 + r() * 1.3, k = 0.6 + r() * 0.9; add(g, 'rock', 'stone', hsl(0.1, 0.08, 0.55 + r() * 0.15), [k, k * 0.75, k * 0.9], [Math.cos(a) * d, 0.1, Math.sin(a) * d], [r(), r() * 3, r()]); }
+    g.userData.followGround = true;
+    return g;
+  },
+  campfire() {
+    const g = new THREE.Group();
+    for (let i = 0; i < 9; i++) { const a = (i / 9) * 6.283; add(g, 'rock', 'stone', hsl(0.09, 0.08, 0.5 + (i % 3) * 0.07), [0.34, 0.26, 0.3], [Math.cos(a) * 0.62, 0.1, Math.sin(a) * 0.62], [0, a, 0]); }
+    for (let i = 0; i < 3; i++) add(g, 'cyl', 'wood', '#6e5238', [0.14, 0.9, 0.14], [0, 0.22, 0], [1.15, (i / 3) * 6.283, 0]);
+    add(g, 'cone', 'glow', '#ff9a3c', [0.42, 0.7, 0.42], [0, 0.5, 0]);
+    add(g, 'cone', 'glow', '#ffd36a', [0.24, 0.45, 0.24], [0, 0.45, 0]);
+    lamp(g, [0, 0.7, 0], '#ff9a4a', 1.6);
+    return g;
+  },
+  beach_hut() {
+    const g = new THREE.Group();
+    add(g, 'box', 'wood', '#c9a878', [3.0, 0.2, 3.2], [0, 0.35, 0.3]);
+    for (const [x, z] of [[-1.3, -1.1], [1.3, -1.1], [-1.3, 1.7], [1.3, 1.7]]) add(g, 'cyl', 'wood', '#8f7252', [0.16, 0.5, 0.16], [x, 0.15, z]);
+    for (let i = 0; i < 6; i++) add(g, 'box', 'matte', i % 2 ? '#f6efe2' : '#7fc4c9', [0.4, 2.0, 2.2], [-1.0 + i * 0.4, 1.45, -0.2]);
+    add(g, 'box', 'wood', '#6e5238', [0.75, 1.5, 0.06], [0, 1.2, 0.92]);
+    tiledPitch(g, 2.4, 2.2, 0.95, 2.45, 0.02);
+    return g;
+  },
+  observatory() {
+    const g = new THREE.Group();
+    footing(g, 1.9, 14, 7);
+    add(g, 'cyl', 'stone', '#d9cfba', [3.3, 2.2, 3.3], [0, 1.1, 0]);
+    add(g, 'cyl', 'wood', '#8f7252', [3.5, 0.18, 3.5], [0, 2.25, 0]);
+    add(g, 'dome', 'metal', '#8fb7b3', [3.3, 3.0, 3.3], [0, 2.3, 0]);
+    add(g, 'box', 'metal', '#3c4a4c', [0.7, 0.1, 1.9], [0, 3.45, 0.75], [-0.75, 0, 0]);
+    add(g, 'cyl', 'metal', '#c9a24a', [0.3, 1.7, 0.3], [0, 3.5, 0.95], [0.85, 0, 0]);
+    add(g, 'box', 'wood', '#6e5238', [0.8, 1.5, 0.1], [0, 0.8, 1.65]);
+    glowPane(g, 'box', [0.5, 0.5, 0.06], [1.15, 1.4, 1.2], [0, 0.75, 0]);
+    lamp(g, [0, 1.6, 1.9], '#ffd28a', 0.7);
+    return g;
+  },
   bench() {
     const g = new THREE.Group();
     add(g, 'box', 'wood', '#b08a5b', [1.6, 0.1, 0.5], [0, 0.5, 0]);

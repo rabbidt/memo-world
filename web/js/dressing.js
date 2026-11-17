@@ -42,7 +42,29 @@ export function addLamp(group, model, power = 1) {
   lamps.push({ bulb: { material: {} }, light, power });
 }
 
-export function buildDressing(items, models) {
+// What the time of year does to each scattered thing: a tint (multiplied into its own colour) or nothing at all.
+const hash = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
+function seasonal(name, canopy, it, S, tint) {
+  tint.setRGB(1, 1, 1);
+  if (!S) return true;
+  const r = hash(it.x, it.z);
+  if (name === 'tree' && canopy) {
+    if (S.bare > 0.55 && r < S.bare * 1.15) return false; // leaves gone
+    if (S.autumn > 0.05) { const a = Math.min(1, S.autumn * 1.4), k = hash(it.z, it.x); tint.lerp(k < 0.35 ? AUTUMN[0] : k < 0.7 ? AUTUMN[1] : AUTUMN[2], a); }
+    if (S.blossom > 0.05 && r < 0.45) tint.lerp(BLOSSOM, S.blossom * 0.8);
+  }
+  if (name === 'bush' && S.autumn > 0.05) tint.lerp(AUTUMN[1], S.autumn * 0.6);
+  if (name === 'grass_tuft') tint.lerp(STRAW, Math.max(S.autumn * 0.6, S.bare * 0.5));
+  if (name.startsWith('flower_cluster') && (S.snow || r > S.flowers * 1.2)) return false;
+  if (name === 'mushrooms' && S.name !== 'autumn' && r > 0.3) return false;
+  if (S.snow && (canopy || name === 'bush' || name === 'grass_tuft' || name === 'rock' || name === 'path_stones')) tint.lerp(SNOWY, name === 'pine' || name === 'tree' ? 0.55 : 0.8);
+  else if (S.frost && (name === 'grass_tuft' || name === 'bush')) tint.lerp(SNOWY, 0.3 * S.frost);
+  return true;
+}
+const AUTUMN = [new THREE.Color(2.6, 1.0, 0.3), new THREE.Color(2.9, 0.7, 0.28), new THREE.Color(2.2, 1.25, 0.3)], BLOSSOM = new THREE.Color(2.1, 1.35, 1.7),
+  STRAW = new THREE.Color(1.5, 1.2, 0.6), SNOWY = new THREE.Color(2.6, 2.7, 2.9);
+
+export function buildDressing(items, models, S = null) {
   const root = new THREE.Group(), byName = new Map();
   for (const it of items) { if (LANDMARKS.has(it.name) || !models[it.name]) continue; if (!byName.has(it.name)) byName.set(it.name, []); byName.get(it.name).push(it); }
   const T = new THREE.Matrix4(), M = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), s = new THREE.Vector3(), p = new THREE.Vector3();
@@ -55,12 +77,15 @@ export function buildDressing(items, models) {
       let canopy = false; for (let a = n; a; a = a.parent) if (a.name.startsWith('Canopy')) canopy = true;
       const pivot = name === 'tree' || name === 'pine' ? (canopy ? -1.5 : 99) : 0; // canopy vertices are measured from the canopy's own pivot
       const mat = SWAY[name] && pivot < 50 ? swaying(n.material, SWAY[name], pivot) : n.material;
-      const inst = new THREE.InstancedMesh(n.geometry, mat, list.length);
-      list.forEach((it, i) => {
+      const inst = new THREE.InstancedMesh(n.geometry, mat, list.length), tint = new THREE.Color();
+      let i = 0;
+      list.forEach((it) => {
+        if (!seasonal(name, canopy, it, S, tint)) return;
         const y = it.y ?? heightAt(it.x, it.z) - (name === 'path_stones' ? 0.05 : 0.03);
         T.compose(p.set(it.x, y, it.z), q.setFromAxisAngle(up, it.rotY || 0), s.setScalar(it.scale || 1));
-        inst.setMatrixAt(i, M.multiplyMatrices(T, n.matrixWorld));
+        inst.setMatrixAt(i, M.multiplyMatrices(T, n.matrixWorld)); inst.setColorAt(i, tint); i++;
       });
+      inst.count = i;
       inst.castShadow = !NO_SHADOW.has(name); inst.receiveShadow = true;
       inst.frustumCulled = false;
       root.add(inst);

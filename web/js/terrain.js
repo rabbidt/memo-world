@@ -1,23 +1,113 @@
 import * as THREE from 'three';
-import { positionLocal, positionWorld, time, sin, vec3, mix } from 'three/tsl';
+import { positionLocal, positionWorld, time, sin, vec3, mix, uv, attribute, smoothstep, abs, clamp, float } from 'three/tsl';
 
 // The island's shape. One function, used for the ground mesh and for standing things on it.
 // Hills and hollows that belong to places (the lookout's hill, the pond's hollow) come from the server
 // with the world, so they move when the Keeper moves the place in the layout.
+let pathCache = null;
 let shaping = [{ x: 22, z: -21, lift: 3.4, radius: 7.5 }, { x: -16, z: -6, lift: -1.15, radius: 4.2 }];
 export function setTerrain(list) { if (Array.isArray(list)) shaping = list; }
 const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 const gauss = (x, z, c, r) => Math.exp(-((x - c.x) ** 2 + (z - c.z) ** 2) / (r * r));
 
-export function heightAt(x, z) {
+export function baseHeightAt(x, z) {
   const a = Math.atan2(z, x);
   const r = Math.hypot(x, z) / (1 + 0.07 * Math.sin(3 * a + 1) + 0.045 * Math.sin(5 * a + 2.3) + 0.03 * Math.sin(9 * a));
   const inland = 1 - smooth(22, 36, r);
   let h = 1.35 * inland - 2.2 * smooth(31, 44, r);
   h += (Math.sin(x * 0.21 + 1.3) * Math.cos(z * 0.17) * 0.45 + Math.sin(x * 0.47 + z * 0.39) * 0.16 + Math.sin(z * 0.83 - x * 0.6) * 0.06) * inland;
   h += (Math.sin(x * 0.085 + 0.6) * Math.cos(z * 0.075 - 1.1) * 0.95 + Math.sin(x * 0.05 - z * 0.06 + 2) * 0.5) * inland; // rolling ground
+  h = Math.max(h, 0.62 * inland - 2.2 * smooth(31, 44, r)); // no dips below the sea inland
   for (const s of shaping) h += s.lift * gauss(x, z, s, s.radius);
+  if (fall) h -= fall.depth * gauss(x, z, fall.pool, 2.7) * smooth(-0.3, 0.3, (x - fall.lip.x) * fall.dx + (z - fall.lip.z) * fall.dz); // a sheer step for the waterfall
   return h;
+}
+
+// ---------- the stream ----------
+// A stream is a list of places to run through. It is sampled every half metre, given a bed that only
+// ever goes downhill, and that bed is cut into the ground, so it makes its own little valley through
+// any rise. Where the route passes the waterfall the ground drops in a step and the water falls.
+let stream = null, fall = null, bridges = [], season = null;
+export function setSeason(s) { season = s; }
+export function setStream(route, { width = 1.2, waterfall = null, endLevel = -Infinity, bridgeSpots = [] } = {}) {
+  stream = null; fall = null; bridges = bridgeSpots; pathCache = null;
+  if (!route || route.length < 2) return;
+  if (waterfall) {
+    const k = route.findIndex((q) => q.x === waterfall.x && q.z === waterfall.z), prev = route[Math.max(0, k - 1)];
+    const len = Math.hypot(waterfall.x - prev.x, waterfall.z - prev.z) || 1, dx = (waterfall.x - prev.x) / len, dz = (waterfall.z - prev.z) / len;
+    fall = { pool: waterfall, depth: 2.3, dx, dz, lip: { x: waterfall.x - dx * 1.9, z: waterfall.z - dz * 1.9 } };
+  }
+  const pts = [], P = (i) => route[Math.min(route.length - 1, Math.max(0, i))];
+  let dist = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    const a = P(i - 1), b = P(i), c = P(i + 1), d = P(i + 2), len = Math.hypot(c.x - b.x, c.z - b.z), steps = Math.max(2, Math.ceil(len / 0.5));
+    for (let j = i ? 1 : 0; j <= steps; j++) {
+      const t = j / steps, t2 = t * t, t3 = t2 * t;
+      const cr = (p0, p1, p2, p3) => 0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3);
+      const wander = Math.sin(t * Math.PI) * Math.sin((dist + t * len) * 0.5) * Math.min(1.1, len * 0.06), nx = -(c.z - b.z) / len, nz = (c.x - b.x) / len;
+      pts.push({ x: cr(a.x, b.x, c.x, d.x) + nx * wander, z: cr(a.z, b.z, c.z, d.z) + nz * wander });
+    }
+    dist += len;
+  }
+  let level = Infinity, run = 0;
+  pts.forEach((q, i) => {
+    if (i) run += Math.hypot(q.x - pts[i - 1].x, q.z - pts[i - 1].z);
+    q.s = run; q.base = baseHeightAt(q.x, q.z);
+    level = Math.min(level, q.base - 0.42);
+    q.bed = Math.min(q.base - 0.3, Math.max(level, endLevel - 0.12));
+  });
+  stream = { pts, width, box: [Math.min(...pts.map((q) => q.x)) - 6, Math.max(...pts.map((q) => q.x)) + 6, Math.min(...pts.map((q) => q.z)) - 6, Math.max(...pts.map((q) => q.z)) + 6] };
+}
+function nearestOnStream(x, z) {
+  if (!stream || x < stream.box[0] || x > stream.box[1] || z < stream.box[2] || z > stream.box[3]) return null;
+  let best = null, bd = 49;
+  for (const q of stream.pts) { const d = (x - q.x) ** 2 + (z - q.z) ** 2; if (d < bd) { bd = d; best = q; } }
+  return best && { q: best, d: Math.sqrt(bd) };
+}
+// How far a spot is from the water's middle (Infinity when there is no stream nearby).
+export const streamDistance = (x, z) => nearestOnStream(x, z)?.d ?? Infinity;
+
+export function heightAt(x, z) {
+  const h = baseHeightAt(x, z), n = nearestOnStream(x, z);
+  if (!n || n.q.bed >= h) return h;
+  const depth = n.q.base - n.q.bed, bank = stream.width * 0.5 + 0.55 + depth * 0.85;
+  if (n.d >= bank) return h;
+  return h + (n.q.bed - h) * (1 - smooth(stream.width * 0.42, bank, n.d));
+}
+// Where feet go: the ground, except on a bridge, where it is the deck.
+export function walkHeightAt(x, z) {
+  for (const b of bridges) { const d = Math.hypot(x - b.x, z - b.z); if (d < 2.6) return Math.max(heightAt(x, z), baseHeightAt(b.x, b.z) + 0.32 + 0.22 * Math.cos((d / 2.6) * Math.PI / 2)); }
+  return heightAt(x, z);
+}
+
+// The water itself: a ribbon lying in the bed, with a current, foam at the banks and white water on the drops.
+export function buildStream() {
+  if (!stream) return new THREE.Group();
+  const { pts, width } = stream, n = pts.length, pos = new Float32Array(n * 6), uvs = new Float32Array(n * 4), white = new Float32Array(n * 2), idx = [];
+  pts.forEach((q, i) => {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], len = Math.hypot(b.x - a.x, b.z - a.z) || 1, nx = -(b.z - a.z) / len, nz = (b.x - a.x) / len;
+    const y = q.bed + 0.17, drop = Math.min(1, Math.max(0, (a.bed - b.bed) / (len * 0.9) - 0.15));
+    pos.set([q.x + nx * width * 0.56, y, q.z + nz * width * 0.56, q.x - nx * width * 0.56, y, q.z - nz * width * 0.56], i * 6);
+    uvs.set([0, q.s, 1, q.s], i * 4); white.set([drop, drop], i * 2);
+    if (i < n - 1) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+  });
+  for (let pass = 0; pass < 2; pass++) for (let i = n - 2; i > 0; i--) { const v = Math.max(white[i * 2], white[(i - 1) * 2] * 0.75, white[(i + 1) * 2] * 0.5); white[i * 2] = white[i * 2 + 1] = v; } // foam carries on below a drop
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geo.setAttribute('white', new THREE.BufferAttribute(white, 1)); geo.setIndex(idx); geo.computeVertexNormals();
+  const mat = new THREE.MeshStandardNodeMaterial({ roughness: 0.12, metalness: 0.05, transparent: true, side: THREE.DoubleSide });
+  const u = uv().x, v = uv().y, rough = attribute('white', 'float');
+  const speed = float(1.4).add(rough.mul(3));
+  const ripple = sin(v.mul(3.2).sub(time.mul(speed).mul(2.2)).add(sin(u.mul(5).add(v.mul(0.9))).mul(2.2)).add(sin(v.mul(11.3).add(u.mul(3))).mul(0.6)));
+  const streaks = smoothstep(0.82, 0.98, ripple).mul(0.55);
+  const edge = smoothstep(0.62, 0.95, abs(u.sub(0.5)).mul(2).add(sin(v.mul(5).sub(time.mul(1.5))).mul(0.08)));
+  const foam = clamp(streaks.add(edge.mul(0.75)).add(rough.mul(float(0.75).add(ripple.mul(0.25)))), 0, 1);
+  const frozen = season?.snow ? 0.35 : 0;
+  mat.colorNode = mix(mix(vec3(0.16, 0.5, 0.6), vec3(0.34, 0.7, 0.76), ripple.mul(0.5).add(0.5)), vec3(1, 1, 1), clamp(foam.add(frozen), 0, 1));
+  mat.opacityNode = clamp(float(0.78).add(foam.mul(0.3)), 0, 1);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.receiveShadow = true;
+  return mesh;
 }
 
 const C = (hex) => new THREE.Color(hex);
@@ -31,7 +121,6 @@ function distToSegment(px, pz, ax, az, bx, bz) {
 }
 
 // Winding paths from the notice board out to every place, as points a pace apart.
-let pathCache = null;
 export function pathSamples(zones) {
   if (pathCache) return pathCache;
   const hub = zones.find((z) => z.id === 'board') || { x: 0, z: 0 }, pts = [];
@@ -45,6 +134,17 @@ export function pathSamples(zones) {
   });
   return (pathCache = pts);
 }
+
+// The time of year on the ground: yellowing in autumn, dull in winter, pale with frost, white under snow.
+const STRAW = C('#c2b25f'), DULL = C('#8e9968'), FROST = C('#dfe9e4'), SNOW = C('#f5f8fc');
+function seasonGround(col, amount = 1) {
+  if (!season) return col;
+  col.lerp(STRAW, season.autumn * 0.4 * amount).lerp(DULL, season.bare * (1 - season.autumn) * 0.5 * amount);
+  if (season.frost) col.lerp(FROST, 0.5 * season.frost * amount);
+  if (season.snow) col.lerp(SNOW, 0.93);
+  return col;
+}
+const BED = C('#a99f88');
 
 export function buildTerrain(zones) {
   const size = 110, seg = 220;
@@ -68,7 +168,10 @@ export function buildTerrain(zones) {
       if (Math.hypot(x, z) < 36) for (let k = 0; k < paths.length; k += 2) { const q = paths[k], dd = Math.abs(x - q.x) + Math.abs(z - q.z); if (dd < d * 1.5) d = Math.min(d, Math.hypot(x - q.x, z - q.z)); }
       for (const zn of zones) d = Math.min(d, Math.max(0, Math.hypot(x - zn.x, z - zn.z) - zn.radius * 0.45) + 0.2);
       const wobble = Math.sin(x * 2.1) * Math.cos(z * 1.7) * 0.25;
-      col.lerp(PATH, (1 - smooth(0.55, 1.5, d + wobble)) * 0.85);
+      seasonGround(col);
+      col.lerp(season?.snow ? SNOW.clone().lerp(PATH, 0.35) : PATH, (1 - smooth(0.55, 1.5, d + wobble)) * 0.85);
+      const sd = streamDistance(x, z);
+      if (sd < 3) col.lerp(BED, 1 - smooth(0.5, 1.5, sd)); // gravel in the stream bed
     }
     colors.set([col.r, col.g, col.b], i * 3);
   }
@@ -103,6 +206,8 @@ export function buildGrass(zones) {
     const x = (inMeadow ? meadow.x : 0) + Math.cos(a) * r, z = (inMeadow ? meadow.z : 0) + Math.sin(a) * r;
     const h = heightAt(x, z);
     if (h < 0.85 || h > 3.9) continue;
+    if (streamDistance(x, z) < 1.5) continue;
+    if (season?.snow && rand() < 0.45) continue; // snow flattens much of the grass
     if (!inMeadow && zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.5)) continue;
     if (pathSamples(zones).some((q, k) => k % 3 === 0 && Math.abs(x - q.x) < 0.9 && Math.abs(z - q.z) < 0.9)) continue;
     p.set(x, h - 0.02, z);
@@ -114,7 +219,7 @@ export function buildGrass(zones) {
     mesh.setMatrixAt(n, m);
     const tone = Math.sin(x * 0.35 + 2) * Math.cos(z * 0.31) * 0.5 + Math.sin(x * 0.11 - z * 0.08 + 4) * 0.25;
     c.setHSL(0.24 + tone * 0.035 + rand() * 0.05, 0.48 + rand() * 0.14, 0.4 + tone * 0.06 + rand() * 0.12);
-    mesh.setColorAt(n, c);
+    mesh.setColorAt(n, seasonGround(c, 1.25));
     n++;
   }
   mesh.count = n;
@@ -138,6 +243,7 @@ export function buildFlowers(zones) {
     for (let i = 0; i < clump && n < count; i++) {
       const x = cx + (rand() - 0.5) * 2.4, z = cz + (rand() - 0.5) * 2.4, h = heightAt(x, z);
       if (h < 0.9 || h > 4) continue;
+      if (streamDistance(x, z) < 1.3 || (season && rand() > season.flowers * (season.snow ? 0 : 1))) continue;
       if (zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.42)) continue;
       const tall = 0.16 + rand() * 0.22, size = 0.1 + rand() * 0.08;
       m.compose(p.set(x, h + tall / 2, z), q.identity(), s.set(0.025, tall, 0.025)); stems.setMatrixAt(n, m);
