@@ -153,8 +153,8 @@ def build_wall(a, seed, path, height=0.78, thick=0.44, cuts=3, moss=0.5, dress=T
     # dark earth core, seen through the joints
     n = max(2, int(L / 0.35))
     for i in range(n):
-        pos, tan, nrm = path.at(L * (i + 0.5) / n)
-        core(box(L / n * 1.15, thick * 0.8, top - 0.14), C('#4a4640', rough=1.0),
+        pos, tan, nrm = path.at(0.14 + (L - 0.28) * (i + 0.5) / n)
+        core(box((L - 0.28) / n * 1.08, thick * 0.72, top - 0.14), C('#5a554c', rough=1.0),
              mtx=Matrix.Translation(pos + UP * ((top - 0.14) / 2)) @ Matrix.Rotation(math.atan2(tan.y, tan.x), 4, 'Z'))
 
     if dress:

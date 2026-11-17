@@ -563,7 +563,7 @@ def pond():
 
 def garden_plot():
     rng = random.Random(61)
-    a = Asset('garden_plot', 'Raised garden bed, 2.8 x 2.2 m, with a stone border and three crop rows.')
+    a = Asset('garden_plot', 'Raised garden bed, 2.8 x 2.2 m, stone border. Crops_spring / _summer / _autumn / _winter are swappable child nodes.')
     stones_part(a)
     P = a.part('Plot')
     put = P.put()
@@ -575,48 +575,86 @@ def garden_plot():
     soil = box(2 * hx, 2 * hy, 0.3, 0.05)
     displace(soil, 0.02, 4, 1)
     put(soil, C(SOIL, rough=1.0), loc=(0, 0, 0.1))
-    for k, y in enumerate((-0.6, 0.0, 0.6)):
+    for y in (-0.6, 0.0, 0.6):
         put(cyl(0.2, 0.2, 2 * hx - 0.3, 8), C(shade(SOIL, 0.9), rough=1.0), loc=(-hx + 0.15, y, 0.16), rot=(0, PI / 2, 0), scale=(0.6, 1, 1))
-        for i in range(5):
-            x = -hx + 0.35 + (2 * hx - 0.7) * i / 4
-            if k == 0:   # cabbages
-                put(blob(0.16, 2, 0.1, 2, i), C('#9cc77a'), loc=(x, y, 0.38))
-                for j in range(5):
-                    an = 2 * PI * j / 5 + i
-                    put(leaf(0.3, 0.26, -0.3, 0.3, 4, 2), C(rng.choice(['#86bf5e', '#6fae52']), double=True),
-                        mtx=TRS((x, y, 0.3), (0, 0, an)) @ TRS(rot=(0.75, 0, 0)), recalc=False)
-            elif k == 1:  # carrots
-                put(cyl(0.05, 0.06, 0.06, 6), C('#e08a3c'), loc=(x, y, 0.27))
-                for j in range(5):
-                    an = 2 * PI * j / 5 + i
-                    put(leaf(0.3, 0.09, 0.2, 0.2, 4, 2), C('#6fae52', double=True),
-                        mtx=TRS((x, y, 0.32), (0, 0, an)) @ TRS(rot=(1.15, 0, 0)), recalc=False)
-            else:        # pumpkins and sprouts
-                if i % 2 == 0:
-                    pm = sphere(1.0, 12, 6)
-                    for v in pm.verts:
-                        an = math.atan2(v.co.y, v.co.x)
-                        f = 1 + 0.08 * math.cos(6 * an)
-                        v.co.x *= f
-                        v.co.y *= f
-                    put(pm, C('#e59a4a', rough=0.6), loc=(x, y, 0.4), scale=(0.2, 0.2, 0.15))
-                    put(cyl(0.025, 0.015, 0.08, 5), C('#5c9c48'), loc=(x, y, 0.53))
-                else:
-                    for j in range(3):
-                        put(leaf(0.22, 0.14, 0.2, 0.3, 4, 2), C('#86bf5e', double=True),
-                            mtx=TRS((x, y, 0.28), (0, 0, 2.1 * j + i)) @ TRS(rot=(1.0, 0, 0)), recalc=False)
-    # sunflower in the back corner, name stake at the front
     sx, sy = hx - 0.2, hy - 0.2
-    put(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx, sy - 0.04, 1.5)], 0.025, 6), C('#5c9c48'))
-    Sf = P.put(TRS((sx, sy - 0.06, 1.52), (0.35, 0, 0)))
-    Sf(cyl(0.12, 0.12, 0.05, 12), C('#6b4630'), rot=(PI / 2, 0, 0))
-    for j in range(12):
-        an = 2 * PI * j / 12
-        Sf(leaf(0.17, 0.08, 0.0, 0.2, 4, 2), C('#f2c94c', double=True),
-           mtx=TRS((0.1 * math.cos(an), -0.03, 0.1 * math.sin(an)), (PI / 2, 0, 0)) @ TRS(rot=(0, 0, an - PI / 2)), recalc=False)
-    for j in range(2):
-        put(leaf(0.3, 0.2, -0.2, 0.2, 4, 2), C('#6fae52', double=True),
-            mtx=TRS((sx, sy, 0.7 + 0.3 * j), (0, 0, 2 + 3 * j)) @ TRS(rot=(0.8, 0, 0)), recalc=False)
+
+    def pumpkin(cp, x, y, s, colr='#e59a4a'):
+        pm = sphere(1.0, 12, 6)
+        for v in pm.verts:
+            f = 1 + 0.08 * math.cos(6 * math.atan2(v.co.y, v.co.x))
+            v.co.x *= f
+            v.co.y *= f
+        cp(pm, C(colr, rough=0.6), loc=(x, y, 0.27 + 0.13 * s), scale=(0.2 * s, 0.2 * s, 0.15 * s))
+        cp(cyl(0.025 * s, 0.015 * s, 0.08 * s, 5), C('#5c9c48'), loc=(x, y, 0.27 + 0.26 * s))
+
+    def leaves(cp, x, y, n, ln, w, pitch, cols, z=0.3, spin=0.0):
+        for j in range(n):
+            cp(leaf(ln, w, 0.2, 0.3, 4, 2), C(rng.choice(cols), double=True),
+               mtx=TRS((x, y, z), (0, 0, 2 * PI * j / n + spin)) @ TRS(rot=(pitch, 0, 0)), recalc=False)
+
+    # one child node per season; summer is the visible default, the others are exported hidden
+    for season in ('spring', 'summer', 'autumn', 'winter'):
+        Cp = a.part('Crops_' + season)
+        Cp.hidden = season != 'summer'
+        cp = Cp.put()
+        for k, y in enumerate((-0.6, 0.0, 0.6)):
+            for i in range(5):
+                x = -hx + 0.35 + (2 * hx - 0.7) * i / 4
+                if season == 'spring':          # rows of seedlings
+                    leaves(cp, x, y, 2 + (k == 0), 0.11, 0.07, 0.9, ['#a6d86a', '#8fcf5a'], 0.27, i)
+                    if i < 4:
+                        leaves(cp, x + 0.3, y, 2, 0.08, 0.05, 0.8, ['#b4e078'], 0.27, i + 1)
+                elif season == 'summer':
+                    if k == 0:                  # cabbages
+                        cp(blob(0.16, 2, 0.1, 2, i), C('#9cc77a'), loc=(x, y, 0.38))
+                        leaves(cp, x, y, 5, 0.3, 0.26, 0.75, ['#86bf5e', '#6fae52'], 0.3, i)
+                    elif k == 1:                # carrots
+                        cp(cyl(0.05, 0.06, 0.06, 6), C('#e08a3c'), loc=(x, y, 0.27))
+                        leaves(cp, x, y, 5, 0.3, 0.09, 1.15, ['#6fae52'], 0.32, i)
+                    elif i % 2 == 0:
+                        pumpkin(cp, x, y, 1.0)
+                    else:
+                        leaves(cp, x, y, 3, 0.22, 0.14, 1.0, ['#86bf5e'], 0.28, i)
+                elif season == 'autumn':        # harvest: big pumpkins, the last cabbages, gaps where crops were lifted
+                    if k == 2:
+                        pumpkin(cp, x, y, 1.35 if i % 2 == 0 else 0.9, '#e07f2e' if i % 2 == 0 else '#edb44e')
+                        leaves(cp, x, y, 3, 0.26, 0.18, 0.5, ['#b7a24a', '#8c9a45'], 0.27, i)
+                    elif k == 0 and i % 2 == 0:
+                        cp(blob(0.19, 2, 0.1, 2, i), C('#a9c77a'), loc=(x, y, 0.4))
+                        leaves(cp, x, y, 5, 0.34, 0.3, 0.6, ['#8fb85a', '#a8b45a'], 0.3, i)
+                    elif k == 1 and i % 3 == 0:
+                        leaves(cp, x, y, 4, 0.26, 0.09, 1.0, ['#b0a44a', '#8fa84a'], 0.3, i)
+                    else:
+                        cp(sphere(1.0, 8, 5), C(shade(SOIL, 0.75), rough=1.0), loc=(x, y, 0.27), scale=(0.1, 0.1, 0.03))   # lifted
+                else:                           # winter: straw mulch over bare soil
+                    for j in range(3):
+                        st = box(rng.uniform(0.3, 0.5), 0.035, 0.012)
+                        cp(st, C(rng.choice(['#d9c078', '#c9ad62', '#e6d08c'])), mtx=TRS((x + rng.uniform(-0.12, 0.12), y + rng.uniform(-0.12, 0.12), 0.275 + 0.008 * j),
+                                                                                         (rng.uniform(-0.1, 0.1), rng.uniform(-0.1, 0.1), rng.uniform(0, PI))))
+        if season == 'summer':
+            cp(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx, sy - 0.04, 1.5)], 0.025, 6), C('#5c9c48'))
+            Sf = Cp.put(TRS((sx, sy - 0.06, 1.52), (0.35, 0, 0)))
+            Sf(cyl(0.12, 0.12, 0.05, 12), C('#6b4630'), rot=(PI / 2, 0, 0))
+            for j in range(12):
+                an = 2 * PI * j / 12
+                Sf(leaf(0.17, 0.08, 0.0, 0.2, 4, 2), C('#f2c94c', double=True),
+                   mtx=TRS((0.1 * math.cos(an), -0.03, 0.1 * math.sin(an)), (PI / 2, 0, 0)) @ TRS(rot=(0, 0, an - PI / 2)), recalc=False)
+            leaves(cp, sx, sy, 2, 0.3, 0.2, 0.8, ['#6fae52'], 0.85, 2)
+        elif season == 'autumn':                # the sunflower has gone to seed and droops
+            cp(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx + 0.02, sy - 0.1, 1.4)], 0.025, 6), C('#8a7a3e'))
+            Sf = Cp.put(TRS((sx + 0.02, sy - 0.16, 1.36), (1.1, 0, 0)))
+            Sf(cyl(0.13, 0.13, 0.06, 12), C('#4a3526'), rot=(PI / 2, 0, 0))
+            leaves(cp, sx, sy, 2, 0.28, 0.18, 0.4, ['#9a8a4a'], 0.8, 2)
+        elif season == 'spring':
+            cp(tube([(sx, sy, 0.2), (sx + 0.01, sy, 0.5)], 0.018, 6), C('#6fae52'))
+            leaves(cp, sx, sy, 3, 0.16, 0.1, 0.9, ['#8fcf5a'], 0.48, 1)
+        else:
+            Sn = Cp.put()
+            for (x, y, s) in ((-0.5, -0.3, 1.0), (0.4, 0.35, 0.8), (0.1, -0.6, 0.6)):   # patches of snow on the mulch
+                sn = boulder(rng, 0.7 * s, 0.5 * s, 0.07, 10, 0.2, 1)
+                Sn(sn, C('#f4f8fb', rough=0.9), loc=(x, y, 0.27))
+
     timber(put, (-hx + 0.1, -hy - 0.2, 0), (-hx + 0.1, -hy - 0.2, 0.5), 0.05, WOODS[1])
     put(box(0.32, 0.03, 0.2, 0.01), C(WOODS[2]), loc=(-hx + 0.1, -hy - 0.23, 0.5))
     # watering can

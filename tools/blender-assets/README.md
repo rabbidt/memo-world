@@ -3,10 +3,7 @@
 Seed-driven generators, run with Blender 5.1 headless. Everything is original geometry and textures made by
 these scripts.
 
-**State on 2026-11-17: work is paused, waiting for a texture pack from Rob.** The models currently in
-`web/assets/models/` are still the first pass. The generators here are the newer hero-quality pass and
-have not been exported into the repo yet (the last full build was interrupted before its shared textures
-were written correctly).
+The models in `web/assets/models/` are built by these scripts.
 
 ```bash
 blender -b --factory-startup --python build.py -- all ../../web/assets/models
@@ -33,7 +30,7 @@ model with its size, triangle count, node pivots and `optional_nodes`.
 
 Optional nodes are exported at scale 0.001 so they stay invisible until the game scales them to 1:
 `Canopy_spring`, `Canopy_autumn`, `Canopy_winter` (summer is the visible default), `Leaves_*` on shrubs,
-and `Snow` on roofed buildings.
+`Snow` on roofed buildings, and `Crops_spring`, `Crops_autumn`, `Crops_winter` on `garden_plot`.
 
 Character nodes: `Body` (with `EyeL`, `EyeR`, `ArmL`, `ArmR`, `Tail` as children and `Notebook` under
 `ArmR`), `FootL`, `FootR`.
