@@ -1,0 +1,1057 @@
+{
+ "units": "metres",
+ "up": "+Y",
+ "front": "+Z",
+ "origin": "ground centre",
+ "models": [
+  {
+   "name": "memo_childlike",
+   "file": "memo_childlike.glb",
+   "bytes": 549340,
+   "triangles": 28620,
+   "size": [
+    0.536,
+    0.65,
+    0.588
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.0645,
+      0.3776,
+      0.1332
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.1,
+      0.3819,
+      0.1305
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.0465,
+      0.2091,
+      -0.0078
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.0473,
+      0.2091,
+      0.0018
+     ],
+     "parent": "Body"
+    },
+    "FootL": {
+     "pivot": [
+      0.0329,
+      0.1002,
+      -0.0301
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0266,
+      0.1002,
+      -0.0185
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      -0.013,
+      0.0892,
+      -0.0959
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.0709,
+      0.0934,
+      0.0574
+     ],
+     "parent": "ArmR"
+    }
+   },
+   "note": "Memo the wolf, childlike stage, 0.65 m to the ear tips. From Rob's wolf3 model."
+  },
+  {
+   "name": "memo_young",
+   "file": "memo_young.glb",
+   "bytes": 549548,
+   "triangles": 28620,
+   "size": [
+    0.585,
+    0.73,
+    0.643
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.0699,
+      0.4313,
+      0.1456
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.1093,
+      0.436,
+      0.1424
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.0523,
+      0.2465,
+      -0.0087
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.0532,
+      0.2465,
+      0.002
+     ],
+     "parent": "Body"
+    },
+    "FootL": {
+     "pivot": [
+      0.037,
+      0.1241,
+      -0.0338
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0299,
+      0.1241,
+      -0.0208
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      -0.0146,
+      0.1117,
+      -0.1079
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.0797,
+      0.1164,
+      0.0645
+     ],
+     "parent": "ArmR"
+    }
+   },
+   "note": "Memo the wolf, young stage, 0.73 m to the ear tips. From Rob's wolf3 model."
+  },
+  {
+   "name": "memo_growing_up",
+   "file": "memo_growing_up.glb",
+   "bytes": 549284,
+   "triangles": 28620,
+   "size": [
+    0.635,
+    0.82,
+    0.697
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.0763,
+      0.4963,
+      0.1572
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.1183,
+      0.5017,
+      0.1541
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.0589,
+      0.2933,
+      -0.0099
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.06,
+      0.2933,
+      0.0023
+     ],
+     "parent": "Body"
+    },
+    "FootL": {
+     "pivot": [
+      0.0417,
+      0.1552,
+      -0.0382
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0338,
+      0.1552,
+      -0.0234
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      -0.0164,
+      0.1412,
+      -0.1217
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.0899,
+      0.1463,
+      0.0726
+     ],
+     "parent": "ArmR"
+    }
+   },
+   "note": "Memo the wolf, growing_up stage, 0.82 m to the ear tips. From Rob's wolf3 model."
+  },
+  {
+   "name": "memo_grown",
+   "file": "memo_grown.glb",
+   "bytes": 549420,
+   "triangles": 28620,
+   "size": [
+    0.671,
+    0.9,
+    0.736
+   ],
+   "nodes": {
+    "Body": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "EyeL": {
+     "pivot": [
+      0.081,
+      0.5584,
+      0.1652
+     ],
+     "parent": "Body"
+    },
+    "EyeR": {
+     "pivot": [
+      -0.1246,
+      0.5642,
+      0.1624
+     ],
+     "parent": "Body"
+    },
+    "ArmL": {
+     "pivot": [
+      0.0649,
+      0.3408,
+      -0.0109
+     ],
+     "parent": "Body"
+    },
+    "ArmR": {
+     "pivot": [
+      -0.0661,
+      0.3408,
+      0.0025
+     ],
+     "parent": "Body"
+    },
+    "FootL": {
+     "pivot": [
+      0.0459,
+      0.1888,
+      -0.042
+     ],
+     "parent": null
+    },
+    "FootR": {
+     "pivot": [
+      -0.0372,
+      0.1888,
+      -0.0258
+     ],
+     "parent": null
+    },
+    "Tail": {
+     "pivot": [
+      -0.0181,
+      0.1734,
+      -0.1339
+     ],
+     "parent": "Body"
+    },
+    "Notebook": {
+     "pivot": [
+      -0.0989,
+      0.1789,
+      0.0797
+     ],
+     "parent": "ArmR"
+    }
+   },
+   "note": "Memo the wolf, grown stage, 0.90 m to the ear tips. From Rob's wolf3 model."
+  },
+  {
+   "name": "library_tower",
+   "file": "library_tower.glb",
+   "bytes": 480144,
+   "triangles": 19616,
+   "size": [
+    4.466,
+    6.257,
+    4.675
+   ],
+   "nodes": {
+    "Tower": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -1.104,
+      1.6,
+      1.5464
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Round stone-and-timber library tower, 3.7 m across at the roof line, 6.2 m tall. Door faces front."
+  },
+  {
+   "name": "workshop_hut",
+   "file": "workshop_hut.glb",
+   "bytes": 450092,
+   "triangles": 19864,
+   "size": [
+    5.507,
+    4.04,
+    4.868
+   ],
+   "nodes": {
+    "Hut": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      -1.2,
+      1.5,
+      1.6
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Open-fronted timber workshop, 4.4 x 3.6 m, 3.8 m tall, with bench, tools, anvil and lantern."
+  },
+  {
+   "name": "burrow",
+   "file": "burrow.glb",
+   "bytes": 346324,
+   "triangles": 13344,
+   "size": [
+    6.033,
+    3.5,
+    8.601
+   ],
+   "nodes": {
+    "Burrow": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      1.68,
+      1.1,
+      3.3
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Memo's den: a turf mound 5.2 m across and 2.2 m tall with a stone front, round door and chimney."
+  },
+  {
+   "name": "notice_board",
+   "file": "notice_board.glb",
+   "bytes": 157408,
+   "triangles": 5448,
+   "size": [
+    2.917,
+    2.647,
+    1.565
+   ],
+   "nodes": {
+    "Board": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Notes": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      1.2,
+      1.4,
+      0.05
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Timber notice board with a tiled roof, 2.9 m wide and 2.5 m tall, with pinned notes."
+  },
+  {
+   "name": "pond",
+   "file": "pond.glb",
+   "bytes": 356472,
+   "triangles": 12656,
+   "size": [
+    11.509,
+    2.214,
+    11.698
+   ],
+   "nodes": {
+    "Water": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Pond": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.72,
+      0.8,
+      3.258
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Pond with a 4.6 m water radius, stone bank, lily pads, reeds and a small jetty. Water is its own node."
+  },
+  {
+   "name": "garden_plot",
+   "file": "garden_plot.glb",
+   "bytes": 140916,
+   "triangles": 4920,
+   "size": [
+    3.919,
+    1.814,
+    3.287
+   ],
+   "nodes": {
+    "Plot": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Raised garden bed, 2.8 x 2.2 m, with a stone border and three crop rows."
+  },
+  {
+   "name": "computer",
+   "file": "computer.glb",
+   "bytes": 65612,
+   "triangles": 2600,
+   "size": [
+    1.5,
+    1.284,
+    1.353
+   ],
+   "nodes": {
+    "Desk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Screen": {
+     "pivot": [
+      -0.1,
+      1.08,
+      0.155
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.6,
+      0.95,
+      -0.22
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Memo's computer desk, 1.5 x 0.8 m. The Screen node glows and can be swapped or animated."
+  },
+  {
+   "name": "lantern",
+   "file": "lantern.glb",
+   "bytes": 36220,
+   "triangles": 988,
+   "size": [
+    0.843,
+    2.376,
+    0.578
+   ],
+   "nodes": {
+    "Lantern": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Light": {
+     "pivot": [
+      0.38,
+      1.6,
+      0
+     ],
+     "parent": null,
+     "empty": true
+    }
+   },
+   "note": "Lantern post, 2.3 m tall. The Light empty marks where a point light goes."
+  },
+  {
+   "name": "bench",
+   "file": "bench.glb",
+   "bytes": 15880,
+   "triangles": 612,
+   "size": [
+    1.5,
+    0.949,
+    0.598
+   ],
+   "nodes": {
+    "Bench": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Timber bench on stone feet, 1.5 m wide."
+  },
+  {
+   "name": "stump",
+   "file": "stump.glb",
+   "bytes": 31728,
+   "triangles": 860,
+   "size": [
+    1.188,
+    0.604,
+    1.188
+   ],
+   "nodes": {
+    "Stump": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Tree stump seat with roots and a mushroom."
+  },
+  {
+   "name": "signpost",
+   "file": "signpost.glb",
+   "bytes": 19676,
+   "triangles": 688,
+   "size": [
+    1.41,
+    1.872,
+    0.571
+   ],
+   "nodes": {
+    "Signpost": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Signpost with two arrow boards on a stone base, 1.9 m tall."
+  },
+  {
+   "name": "tree",
+   "file": "tree.glb",
+   "bytes": 66696,
+   "triangles": 2304,
+   "size": [
+    4.081,
+    4.96,
+    3.916
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy": {
+     "pivot": [
+      0.0,
+      2.852,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Round leafy tree, about 5.3 m tall. Canopy is its own node for swaying."
+  },
+  {
+   "name": "pine",
+   "file": "pine.glb",
+   "bytes": 32140,
+   "triangles": 1008,
+   "size": [
+    3.989,
+    5.443,
+    3.804
+   ],
+   "nodes": {
+    "Trunk": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Canopy": {
+     "pivot": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Chunky layered pine, about 6 m tall. Canopy is its own node for swaying."
+  },
+  {
+   "name": "rock",
+   "file": "rock.glb",
+   "bytes": 20376,
+   "triangles": 496,
+   "size": [
+    1.531,
+    0.886,
+    1.143
+   ],
+   "nodes": {
+    "Rock": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Mossy boulder with two smaller stones, about 1.3 m across."
+  },
+  {
+   "name": "bush",
+   "file": "bush.glb",
+   "bytes": 18920,
+   "triangles": 832,
+   "size": [
+    1.739,
+    0.971,
+    1.391
+   ],
+   "nodes": {
+    "Bush": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Flowering bush, about 1.4 m across."
+  },
+  {
+   "name": "well",
+   "file": "well.glb",
+   "bytes": 140516,
+   "triangles": 5600,
+   "size": [
+    2.1,
+    2.74,
+    2.093
+   ],
+   "nodes": {
+    "Well": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Stone well with a tiled roof and bucket, 2.6 m tall."
+  },
+  {
+   "name": "stone_wall",
+   "file": "stone_wall.glb",
+   "bytes": 71184,
+   "triangles": 2452,
+   "size": [
+    4.08,
+    0.84,
+    1.313
+   ],
+   "nodes": {
+    "Wall": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Curving low stone wall: an 80 degree arc of radius 3 m centred on the origin, 0.75 m tall. Repeat to ring a yard."
+  },
+  {
+   "name": "path_stones",
+   "file": "path_stones.glb",
+   "bytes": 32856,
+   "triangles": 1200,
+   "size": [
+    1.565,
+    0.263,
+    2.716
+   ],
+   "nodes": {
+    "Path": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Cobbled path piece, about 2.6 x 1.3 m, running front to back. Tile along a route."
+  },
+  {
+   "name": "fence",
+   "file": "fence.glb",
+   "bytes": 30996,
+   "triangles": 708,
+   "size": [
+    2.525,
+    0.983,
+    0.392
+   ],
+   "nodes": {
+    "Fence": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Rustic timber fence segment, 2.4 m long, 0.9 m tall."
+  },
+  {
+   "name": "grass_tuft",
+   "file": "grass_tuft.glb",
+   "bytes": 8084,
+   "triangles": 216,
+   "size": [
+    0.267,
+    0.46,
+    0.313
+   ],
+   "nodes": {
+    "Grass": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Tufty grass clump, 0.45 m tall. Scatter many."
+  },
+  {
+   "name": "mushrooms",
+   "file": "mushrooms.glb",
+   "bytes": 25036,
+   "triangles": 676,
+   "size": [
+    0.72,
+    0.49,
+    0.516
+   ],
+   "nodes": {
+    "Mushrooms": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Three red-capped mushrooms."
+  },
+  {
+   "name": "crate",
+   "file": "crate.glb",
+   "bytes": 12792,
+   "triangles": 572,
+   "size": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "nodes": {
+    "Crate": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Wooden crate, 0.6 m."
+  },
+  {
+   "name": "barrel",
+   "file": "barrel.glb",
+   "bytes": 15184,
+   "triangles": 476,
+   "size": [
+    0.67,
+    0.8,
+    0.653
+   ],
+   "nodes": {
+    "Barrel": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Barrel, 0.8 m tall."
+  },
+  {
+   "name": "lookout",
+   "file": "lookout.glb",
+   "bytes": 98928,
+   "triangles": 3168,
+   "size": [
+    4.731,
+    3.025,
+    4.734
+   ],
+   "nodes": {
+    "Lookout": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    },
+    "Pennant": {
+     "pivot": [
+      1.1,
+      2.75,
+      -0.6
+     ],
+     "parent": null
+    }
+   },
+   "note": "Lookout set for the hilltop: telescope on a tripod, pennant pole and a ring of stones. Pennant is its own node."
+  },
+  {
+   "name": "flower_cluster",
+   "file": "flower_cluster.glb",
+   "bytes": 65152,
+   "triangles": 1584,
+   "size": [
+    0.642,
+    0.43,
+    0.754
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  },
+  {
+   "name": "flower_cluster_gold",
+   "file": "flower_cluster_gold.glb",
+   "bytes": 65152,
+   "triangles": 1584,
+   "size": [
+    0.526,
+    0.406,
+    0.869
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  },
+  {
+   "name": "flower_cluster_blue",
+   "file": "flower_cluster_blue.glb",
+   "bytes": 65164,
+   "triangles": 1584,
+   "size": [
+    0.799,
+    0.446,
+    0.81
+   ],
+   "nodes": {
+    "Flowers": {
+     "pivot": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "parent": null
+    }
+   },
+   "note": "Cluster of wildflowers with grass, about 0.8 m across."
+  }
+ ]
+}
