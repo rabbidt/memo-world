@@ -26,6 +26,7 @@ turn = math.radians(float(opts.get('turn', 25)))
 gap = float(opts.get('gap', 0.3))
 cols = int(opts.get('cols', len(files)))
 elev = math.radians(float(opts.get('elev', 14)))
+season = opts.get('season', 'summer')
 
 for ob in list(bpy.data.objects):
     bpy.data.objects.remove(ob, do_unlink=True)
@@ -52,6 +53,15 @@ for f in files:
     bpy.ops.import_scene.gltf(filepath=f)
     new = [o for o in bpy.data.objects if o not in before]
     roots = [o for o in new if o.parent is None]
+    for o in new:
+        base = o.name.split('.')[0]
+        if base.startswith(('Canopy_', 'Leaves_')):
+            on = base.endswith('_' + season) or (season == 'winter' and False)
+            if not on and not any(n.name.split('.')[0] == base.rsplit('_', 1)[0] + '_' + season for n in new):
+                on = base.endswith('_summer')
+            o.scale = (1, 1, 1) if on else (0.001,) * 3
+        if base == 'Snow':
+            o.scale = (1, 1, 1) if season == 'winter' else (0.001,) * 3
     for r in roots:
         r.rotation_mode = 'XYZ'
         r.rotation_euler.z += turn

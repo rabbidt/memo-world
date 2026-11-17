@@ -36,7 +36,11 @@ protos = {}
 def proto(name):
     if name not in protos:
         before = set(bpy.data.objects)
-        bpy.ops.import_scene.gltf(filepath=os.path.join(models, name + '.glb'))
+        f = os.path.join(models, name + '.gltf')
+        bpy.ops.import_scene.gltf(filepath=f if os.path.exists(f) else os.path.join(models, name + '.glb'))
+        for o in bpy.data.objects:
+            if o not in before and o.name.split('.')[0] in ('Canopy_spring', 'Canopy_autumn', 'Canopy_winter', 'Leaves_spring', 'Leaves_autumn', 'Leaves_winter', 'Snow'):
+                o.hide_render = True
         new = [o for o in bpy.data.objects if o not in before]
         root = next(o for o in new if o.parent is None)
         root.location = (0, 0, -500)
@@ -78,6 +82,9 @@ def place(name, x, z, rot=None, scale=1.0, y=None):
 def free(x, z, margin=0.0):
     if math.hypot(x, z) > LAND_R - 2.5:
         return False
+    for ex, ez, er in ((24, 3, 4.0), (-21.5, 14.5, 3.5), (16, -17, 4.5), (-1, -9.5, 3.0)):
+        if math.hypot(x - ex, z - ez) < er + margin:
+            return False
     for nm, (zx, zz, zr) in ZONES.items():
         if nm in ('meadow', 'shore'):
             continue
@@ -115,8 +122,11 @@ for i in range(3):
     place('fence', gx - 4.9, gz - 2.6 + 2.4 * i, rot=math.pi / 2)
 place('well', gx - 6.0, gz - 4.6)
 lx, lz = ZONES['lookout'][:2]
-place('lookout', lx, lz)
-place('bench', lx - 1.0, lz + 0.9, rot=math.atan2(1, 1))
+place('observatory', lx, lz)
+place('waterfall', 16, -17, rot=math.atan2(-6, 4))
+place('bridge', -1, -9.5, rot=math.atan2(-2, -17))
+place('campfire', 24, 3)
+place('beach_hut', -21.5, 14.5)
 # plaza ring of low wall with gaps for the paths
 for k in range(4):
     place('stone_wall', 0, 0, rot=math.pi / 4 + k * math.pi / 2 + 0.2, scale=1.5)
@@ -160,14 +170,14 @@ while count < 26 and tries < 2000:
     for k in range(rng.randint(2, 4)):
         ox, oz = rng.uniform(-3, 3), rng.uniform(-3, 3)
         if free(x + ox, z + oz, 1.0) and not near_path(x + ox, z + oz, 2.2):
-            place(rng.choice(('tree', 'tree', 'pine')), x + ox, z + oz, rot=rng.uniform(0, 6.28), scale=rng.uniform(0.8, 1.2))
+            place(rng.choice(('tree', 'tree_tall', 'tree_wide', 'tree_birch', 'tree_blossom', 'pine', 'pine', 'pine_tall')), x + ox, z + oz, rot=rng.uniform(0, 6.28), scale=rng.uniform(0.85, 1.15))
     for k in range(rng.randint(1, 3)):
         ox, oz = rng.uniform(-4, 4), rng.uniform(-4, 4)
         if free(x + ox, z + oz, 0.5) and not near_path(x + ox, z + oz, 1.4):
-            place(rng.choice(('bush', 'bush', 'rock')), x + ox, z + oz, rot=rng.uniform(0, 6.28), scale=rng.uniform(0.8, 1.25))
+            place(rng.choice(('bush', 'bush_low', 'bush_berry', 'rock', 'rock_flat')), x + ox, z + oz, rot=rng.uniform(0, 6.28), scale=rng.uniform(0.8, 1.25))
 
 for name, n, margin in (('grass_tuft', 420, -1.0), ('flower_cluster', 60, -0.5), ('flower_cluster_gold', 50, -0.5),
-                        ('flower_cluster_blue', 40, -0.5), ('mushrooms', 14, 0.5), ('rock', 16, 0.5), ('bush', 22, 0.5)):
+                        ('flower_cluster_blue', 40, -0.5), ('mushrooms', 14, 0.5), ('rock', 8, 0.5), ('rock_tall', 4, 0.5), ('rock_flat', 6, 0.5), ('bush', 10, 0.5), ('bush_low', 10, 0.5), ('bush_berry', 6, 0.5)):
     c = 0
     tries = 0
     while c < n and tries < 20000:
@@ -334,7 +344,8 @@ SHOTS = {
     'plaza': ((7, -13, 4.5), (0, 0, 1.3), 32, (2200, 1300)),
     'den': ((-1.5, -3.5, 3.0), (-9, -9, 1.0), 30, (2200, 1300)),
     'library': ((7, 6.5, 4.5), (-2, 17, 2.6), 32, (2200, 1300)),
-    'pond_workshop': ((2, -4, 9), (15, 8, 1.5), 28, (2200, 1300)),
+    'hill': ((6, 10, 6), (19, 19, 2.5), 30, (2200, 1300)),
+    'camp_beach': ((14, -8, 5), (24, -3, 0.8), 30, (2200, 1300)),
 }
 for name, (pos, target, lens, res) in SHOTS.items():
     cam.lens = lens
