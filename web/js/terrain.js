@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { positionLocal, positionWorld, time, sin, vec3, mix } from 'three/tsl';
 
 // The island's shape. One function, used for the ground mesh and for standing things on it.
 const HILL = { x: 22, z: -21 }, POND = { x: -16, z: -6 };
@@ -54,7 +55,7 @@ export function buildTerrain(zones) {
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), h = heightAt(x, z);
     pos.setY(i, h);
-    const patch = Math.sin(x * 0.35 + 2) * Math.cos(z * 0.31) * 0.5 + Math.sin(x * 1.3 + z * 0.9) * 0.25 + 0.5;
+    const patch = Math.sin(x * 0.35 + 2) * Math.cos(z * 0.31) * 0.42 + Math.sin(x * 1.3 + z * 0.9) * 0.2 + Math.sin(x * 0.11 - z * 0.08 + 4) * 0.18 + Math.sin(x * 3.1 + 1) * Math.sin(z * 2.7) * 0.08 + 0.5;
     if (h < -0.05) col.copy(SEABED).lerp(SAND_WET, smooth(-1.2, -0.05, h));
     else if (h < 0.75) col.copy(SAND_WET).lerp(SAND, smooth(0, 0.35, h)).lerp(GRASS, smooth(0.55, 0.8, h));
     else {
@@ -78,10 +79,16 @@ export function buildTerrain(zones) {
 
 // Thousands of grass blades in one draw call.
 export function buildGrass(zones) {
-  const blade = new THREE.ConeGeometry(0.085, 0.34, 4, 1);
+  const blade = new THREE.ConeGeometry(0.06, 0.34, 3, 2);
   blade.translate(0, 0.19, 0);
-  const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1 });
-  const count = 17000;
+  // Blades are dark at the root so they melt into the ground, and they lean with the wind.
+  const mat = new THREE.MeshStandardNodeMaterial({ color: '#ffffff', roughness: 1 });
+  const up = positionLocal.y.div(0.36).clamp(0, 1);
+  mat.colorNode = mix(vec3(0.62, 0.74, 0.5), vec3(1.08, 1.06, 0.9), up);
+  const phase = positionWorld.x.mul(0.4).add(positionWorld.z.mul(0.31));
+  const gust = sin(time.mul(1.6).add(phase)).add(sin(time.mul(3.7).add(phase.mul(1.9))).mul(0.3));
+  mat.positionNode = positionLocal.add(vec3(gust.mul(up).mul(up).mul(0.09), 0, gust.mul(up).mul(up).mul(0.05)));
+  const count = 52000;
   const mesh = new THREE.InstancedMesh(blade, mat, count);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), e = new THREE.Euler();
   const c = new THREE.Color();
@@ -103,7 +110,8 @@ export function buildGrass(zones) {
     s.set(k, k * (0.8 + rand() * 0.8), k);
     m.compose(p, q, s);
     mesh.setMatrixAt(n, m);
-    c.setHSL(0.23 + rand() * 0.08, 0.5 + rand() * 0.14, 0.42 + rand() * 0.16);
+    const tone = Math.sin(x * 0.35 + 2) * Math.cos(z * 0.31) * 0.5 + Math.sin(x * 0.11 - z * 0.08 + 4) * 0.25;
+    c.setHSL(0.24 + tone * 0.035 + rand() * 0.05, 0.48 + rand() * 0.14, 0.4 + tone * 0.06 + rand() * 0.12);
     mesh.setColorAt(n, c);
     n++;
   }
