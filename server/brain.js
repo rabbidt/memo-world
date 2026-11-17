@@ -8,6 +8,7 @@ import { callClaude, toolUses, BudgetError } from './llm.js';
 import { computerTools, computerActions, libraryLines } from './computer.js';
 import { RECIPE_SCHEMA, sanitizeRecipe } from './recipe.js';
 import { cleanText, blockedReason } from './filter.js';
+import { skyLines, seasonalFinds, isDark, isDusk, outdoorCost } from './seasons.js';
 import {
   getZones, getZone, getMemo, updateMemo, getInventory, addItem, takeItem,
   featureZone, addCreation, addSite, removeObject, moveObject, addPet, movePets,
@@ -121,6 +122,11 @@ function tickTools() {
       kind: str('Which kind.', { enum: ['goal', 'interest', 'hobby', 'belief', 'word'] }),
       text: str('For add: the goal, interest or belief in plain English; for a word: "word = meaning". For drop: the number of the one to drop.'),
     }),
+    tool('wish_to_travel', 'Pin a wish to explore or travel somewhere beyond what you know: across the water, to another island, anywhere you imagine. You must be at the notice board. If the Keeper agrees, a new place will open to you in time.', {
+      where: str('Where you want to go or what you hope to find, in plain English.'), text: str('The wish, in your own voice.'), reason: str('Why, in plain English.'),
+    }),
+    tool('stargaze', 'Look at the night sky through the observatory. Only at the observatory, and only when it is dark.', { looking_for: str('What you want to look at or wonder about.') }),
+    tool('sit_by_fire', 'Light the campfire and sit by it for a while. Only at the campfire circle, in the evening or at night.', {}),
     tool('name_island', 'Give your island a name, or change the name it has. It is yours to name whenever and however you like.', {
       name: str('The name, in your own voice.'), english: str('What the name means in plain English.'),
     }),
@@ -146,6 +152,10 @@ export const activeProject = () => {
   return p ? { ...p, recipe: JSON.parse(p.recipe), supplies: JSON.parse(p.supplies) } : null;
 };
 
+const areasLine = () => {
+  const areas = all('SELECT name, status FROM areas');
+  return areas.length ? `Beyond your island: ${areas.map((a) => `${a.name} (${a.status === 'open' ? 'open to you' : 'promised by the Keeper, not ready to visit yet'})`).join(', ')}.` : null;
+};
 function perceive() {
   const memo = getMemo(), zones = getZones(), zone = zones.find((z) => z.id === memo.zone);
   const now = new Date();
@@ -176,7 +186,9 @@ function perceive() {
     `You are at the ${zone.name} [${zone.id}]. ${zone.description}`,
     `Around you: ${scenery.join(', ') || 'open ground'}.`,
     mine.length ? `Things you made that stand here: ${mine.join(', ')}.` : null,
-    `You could gather here: ${zone.gatherables.join(', ')}.`,
+    ...skyLines(zone, now),
+    `You could gather here: ${[...zone.gatherables, ...seasonalFinds(zone, now)].join(', ')}.`,
+    areasLine(),
     `Other places: ${zones.filter((z) => z.id !== zone.id).map((z) => `${z.name} [${z.id}]`).join(', ')}.`,
     pets.length ? `Your pets: ${pets.map((p) => `${p.name} (#${p.id}, ${p.zone_id === memo.zone ? 'here with you' : `at the ${zones.find((z) => z.id === p.zone_id)?.name}`})`).join(', ')}.` : null,
     `Energy ${memo.energy}/100. Mood: ${memo.mood}. Pouch: ${inv}.`,
@@ -287,10 +299,11 @@ export const actions = {
     const memo = getMemo(), zone = getZone(memo.zone);
     if (memo.energy < 5) return 'You are too tired to bend down. A nap would help.';
     const want = String(item || '').toLowerCase();
-    const found = zone.gatherables.find((g) => want && (want.includes(g) || g.includes(want))) || pick(zone.gatherables);
+    const here = [...zone.gatherables, ...seasonalFinds(zone)];
+    const found = here.find((g) => want && (want.includes(g) || g.includes(want))) || pick(here);
     const qty = Math.random() < 0.3 ? 2 : 1;
     addItem(found, qty);
-    updateMemo({ activity: 'gathering', energy: memo.energy - 3 });
+    updateMemo({ activity: 'gathering', energy: memo.energy - 3 - outdoorCost() });
     logEvent('gather', `Found ${qty} ${found} at the ${zone.name}.`, { item: found, qty });
     return `${want && !found.includes(want) && !want.includes(found) ? `No ${item} here, but you` : 'You'} found ${qty} ${found} and tucked ${qty > 1 ? 'them' : 'it'} into your pouch.`;
   },
@@ -428,6 +441,37 @@ export const actions = {
     emit('messages'); notifyKeeper(t, e); shiftNeeds({ loneliness: -10 });
     logEvent('message', `Sent the Keeper a note: "${e.slice(0, 160)}"`, {}, 3);
     return 'The note flutters off toward the Keeper.';
+  },
+  wish_to_travel({ where, text, reason }) {
+    const board = featureZone('notice_board');
+    if (!board) return 'There is no notice board on the island, so there is nowhere to pin a wish.';
+    if (getMemo().zone !== board) return 'Wishes are pinned at the notice board. Go there first.';
+    if (get("SELECT COUNT(*) AS n FROM wishes WHERE status = 'open' AND kind = 'travel'").n >= 1) return 'You already have a travel wish on the board. Wait for the Keeper to answer it.';
+    const w = cleanText(where, 200); if (!w) return 'Say where you would like to go.';
+    run("INSERT INTO wishes(ts, text, english, reason, kind) VALUES(?,?,?,?, 'travel')", nowIso(), String(text || w).slice(0, 300), `To travel: ${w}`, String(reason || '').slice(0, 300));
+    emit('wishes'); updateMemo({ activity: 'writing' });
+    logEvent('wish', `Pinned a wish to travel: "${w.slice(0, 160)}"`, {}, 4);
+    return 'You pin the travel wish to the board. The world may grow, if the Keeper agrees.';
+  },
+  stargaze({ looking_for }) {
+    const z = featureZone('observatory'), memo = getMemo();
+    if (!z) return 'There is no observatory on the island.';
+    if (memo.zone !== z) return `The observatory is at the ${getZone(z).name}. Go there first.`;
+    if (!isDark()) return 'The sky is still too bright for stars. Come back after dark.';
+    updateMemo({ activity: 'looking', energy: memo.energy - 1 });
+    shiftNeeds({ curiosity: -20, loneliness: -3 });
+    logEvent('stargaze', `Looked at the night sky from the observatory${looking_for ? `, wondering about ${cleanText(looking_for, 100)}` : ''}.`, {}, 2);
+    return `You put your eye to the telescope. ${pick(['The stars are sharp and very many.', 'A thin cloud drifts off and the sky opens up.', 'One star seems to flicker red, then white.', 'The moon fills the glass, all pits and seas.'])} ${skyLines(null)[1]}`;
+  },
+  sit_by_fire() {
+    const z = featureZone('campfire'), memo = getMemo();
+    if (!z) return 'There is no campfire circle on the island.';
+    if (memo.zone !== z) return `The campfire circle is at the ${getZone(z).name}. Go there first.`;
+    if (!isDusk()) return 'It is too bright and early for a fire. Evenings are for fires.';
+    updateMemo({ activity: 'resting', energy: memo.energy + 6 });
+    shiftNeeds({ loneliness: -8, urge: -4 });
+    logEvent('campfire', 'Lit the campfire and sat by it for a while.', {}, 2);
+    return 'The fire catches. You sit on a stump and watch the sparks go up. You feel warm and settled.';
   },
   name_island({ name, english }) {
     const n = cleanText(name, 40), e = cleanText(english || name, 80);

@@ -176,9 +176,17 @@ export async function initUI({ world, data, focusOn, setFollow, refreshBoard }) 
 
   function wishCard(w) {
     const supply = Boolean(w.project_id);
+    if (w.kind === 'travel') return h('div', { class: 'note' }, said(w.text, w.english), w.reason ? h('div', { class: 'small muted', style: 'margin:4px 0 8px' }, w.reason) : null, isOwner ? travelForm(w) : h('div', { class: 'small muted' }, 'A wish to travel. Only the Keeper can answer it.'));
     return h('div', { class: 'note' }, said(w.text, w.english), w.reason ? h('div', { class: 'small muted', style: 'margin:4px 0 8px' }, w.reason) : null,
       supply ? h('div', { class: 'row' }, h('span', { class: 'small muted' }, 'Supplies for his building.'),
         h('button', { class: 'primary', onclick: () => send({ wish_id: w.id, note: '' }) }, 'Send supplies')) : giftForm(w));
+  }
+  function travelForm(w) {
+    const name = h('input', { placeholder: 'Name the new place, e.g. Orchard Isle', maxLength: 60 });
+    const desc = h('input', { placeholder: 'What is it like? (optional)', maxLength: 300 });
+    return h('div', { class: 'stack' }, h('div', { class: 'small muted' }, 'Ash wants to travel. Promise him a new place and it is recorded for building; he is told it will open in time.'), name, desc, h('div', { class: 'row' },
+      h('button', { class: 'primary', onclick: async () => { if (await act(() => api(`wishes/${w.id}/promise-area`, { name: name.value, description: desc.value }), 'Promised. Ash will hear of it.')) load('wishes'); } }, 'Promise this place'),
+      h('button', { onclick: async () => { if (await act(() => api(`wishes/${w.id}/decline`, { note: '' }), 'Answered: not this time.')) load('wishes'); } }, 'Not this time')));
   }
   function giftForm(w) {
     const name = h('input', { placeholder: w ? 'What are you giving?' : 'A gift, e.g. a tiny bell', maxLength: 60 });

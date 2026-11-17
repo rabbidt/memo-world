@@ -53,6 +53,7 @@ app.get('/api/world', anyone, (req, res) => res.json({
   zones: getZones(), terrain: getTerrain(), objects: getObjects(), memo: memoView(), inventory: getInventory(),
   parcels: all("SELECT id, from_name, kind FROM gifts WHERE status = 'waiting'"),
   project: activeProject(), programs: programsView(), status: status(),
+  areas: all('SELECT id, name, description, status FROM areas'),
   island: { name: getState('island_name', ''), english: getState('island_name_english', '') },
   budget: req.who.role === 'owner' ? budgetSummary() : null,
 }));
@@ -122,6 +123,20 @@ app.post('/api/gifts', anyone, (req, res) => {
     emit('wishes');
   }
   emit('gifts');
+  res.json({ ok: true });
+});
+
+// A travel wish is answered by promising a new area. It is only recorded here: the area is built later
+// and then switched to 'open'.
+app.post('/api/wishes/:id/promise-area', owner, (req, res) => {
+  const wish = get("SELECT * FROM wishes WHERE id = ? AND status = 'open' AND kind = 'travel'", Number(req.params.id));
+  if (!wish) return res.status(404).json({ error: 'That travel wish is no longer open.' });
+  const name = cleanText(req.body?.name, 60), description = cleanText(req.body?.description, 300), note = cleanText(req.body?.note, 200);
+  if (!name) return res.status(400).json({ error: 'The new place needs a name.' });
+  run("INSERT INTO areas(name, description, status, wish_id, created_at) VALUES(?, ?, 'promised', ?, ?)", name, description || null, wish.id, nowIso());
+  run("UPDATE wishes SET status = 'granted', reply = ?, answered_at = ? WHERE id = ?", note || `A way to ${name} will open.`, nowIso(), wish.id);
+  logEvent('wish', `The Keeper answered my wish to travel: a place called ${name} will open to me in time.${description ? ` "${description}"` : ''}`, {}, 5);
+  emit('wishes'); emit('world');
   res.json({ ok: true });
 });
 

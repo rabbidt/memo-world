@@ -129,6 +129,13 @@ assert.match(get("SELECT value FROM state WHERE key = 'island_name'").value, /Ta
 assert.match(await brain.actions.name_island({ name: 'Nala', english: 'Night' }), /called Nala/);
 assert.match(get("SELECT value FROM state WHERE key = 'island_name'").value, /Nala/);
 
+// 8c. The real season reaches his senses, and a travel wish becomes a promised area.
+assert.match(calls.at(-1).messages[0].content, /It is (early|mid|late) (spring|summer|autumn|winter)\./);
+assert.match(calls.at(-1).messages[0].content, /The sun is (up|down): it rose at \d\d:\d\d and sets at \d\d:\d\d/);
+await moment([['move_to', { zone: 'board' }], ['wish_to_travel', { where: 'the island I can see across the water', text: 'Tiki nala.', reason: 'curious' }]], [think]);
+assert.equal(get("SELECT kind FROM wishes WHERE kind = 'travel'").kind, 'travel');
+assert.match(await brain.actions.wish_to_travel({ where: 'further' }), /already have a travel wish/);
+
 // 9. Growing up is capped at adult.
 assert.ok(brain.maturity() > 0 && brain.maturity() <= 1);
 assert.equal(brain.lifeStage(5).name, 'grown');
