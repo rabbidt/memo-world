@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
+import { heightAt, setTerrain, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
 import { builders, lamps, glows } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
@@ -136,7 +136,7 @@ const pickable = [];
 
 function placeObject(o) {
   const build = builders[o.kind];
-  if (!build) return;
+  if (!build && !models[o.kind]) return; // a kind with neither a built-in shape nor a model is left out
   if (dressed && o.created_by === 'world' && (dressed.kinds.has(o.kind) || o.kind === 'wall') && !LANDMARKS.has(o.kind)) return; // the layout already dresses these
   const lay = dressed && LANDMARKS.has(o.kind) && dressed.items.find((it) => it.name === o.kind);
   if (lay) o = { ...o, x: lay.x, z: lay.z, rot: lay.rotY, scale: lay.scale };
@@ -314,6 +314,7 @@ async function start() {
   let data;
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
+  setTerrain(data.terrain);
   await loadModels();
   const layout = params.get('models') === '0' ? null : await loadLayout();
   if (layout && layout.some((it) => models[it.name])) dressed = { items: layout, kinds: new Set(layout.filter((it) => models[it.name]).map((it) => it.name)) };

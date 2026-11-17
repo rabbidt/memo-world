@@ -38,6 +38,15 @@ something to look at straight away.
 | **Talk to you** | Up to three notes a day, only between 9am and 9pm UK time. You can reply from the Notes tab. |
 | **Grow up** | Experience takes him from pup to grown wolf, changing how he thinks and looks. He stops at adult and never grows old. |
 
+## What the island starts with
+
+`world/island-layout.xlsx` is the checklist of every place and thing on the island at the start: what it is for,
+what happens if it is left out, and where it stands. Set **Include** to `N` to leave something out, add rows of your
+own, save, and start the game. The island is laid out again whenever the file has changed; everything Ash has made,
+his pets and his memories are kept. `npm run layout` checks the file, lists anything odd and saves a top-down map
+to `world/island-map.svg`. The notice board, den, computer and library do their jobs wherever they stand, so they
+can be moved between places or left out altogether.
+
 ## What it costs
 
 There is a hard cap, `MEMO_MONTHLY_CAP_USD` (default **$10** a month). Every call to Claude is

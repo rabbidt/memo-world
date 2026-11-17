@@ -8,7 +8,7 @@ import { all, get, run, nowIso, logEvent, emit } from './db.js';
 import { config, demoMode } from './config.js';
 import { callClaude, toolUses, textOf } from './llm.js';
 import { blockedReason, cleanText, BLOCKED_DOMAINS } from './filter.js';
-import { getMemo, updateMemo, addCreation } from './world.js';
+import { getMemo, updateMemo, addCreation, featureZone, getZone } from './world.js';
 import { cannedRecipe } from './instinct.js';
 
 const APPS = [
@@ -69,7 +69,7 @@ export function computerTools() {
 // What Ash notices about the library when he looks around.
 export function libraryLines(zone) {
   const out = [];
-  if (zone === 'library') {
+  if (zone === featureZone('library_tower')) {
     const books = all('SELECT * FROM books ORDER BY (started_at IS NULL), started_at DESC LIMIT 12');
     if (books.length) out.push(`Books on the shelves: ${books.map((b) => `#${b.id} "${b.title}" (${b.finished_at ? 'finished' : b.position ? `${Math.round((b.position / b.chars) * 100)}% read` : 'unread'})`).join(', ')}.`);
     const docs = all('SELECT id, title FROM documents ORDER BY id DESC LIMIT 8');
@@ -140,8 +140,8 @@ async function commitToGithub(slug, html, message) {
 }
 
 export function computerActions({ systemNow, countToday, bumpToday, shiftNeeds }) {
-  const atDesk = () => (getMemo().zone === 'library' ? null : 'The computer is on its desk by the library. Go there first.');
-  const atLibrary = () => (getMemo().zone === 'library' ? null : 'The books are at the library. Go there first.');
+  const atDesk = () => { const z = featureZone('computer'); return !z ? 'There is no computer on the island.' : getMemo().zone === z ? null : `The computer is on its desk at the ${getZone(z).name}. Go there first.`; };
+  const atLibrary = () => { const z = featureZone('library_tower'); return !z ? 'There is no library on the island.' : getMemo().zone === z ? null : `The books are at the ${getZone(z).name}. Go there first.`; };
 
   const apps = {
     async claude(q, reason) {
@@ -231,7 +231,7 @@ export function computerActions({ systemNow, countToday, bumpToday, shiftNeeds }
       const name = cleanText(input.name, 60) || 'a program', english = String(input.english || '').slice(0, 600);
       const r = run('INSERT INTO programs(ts, name, kind, description, english, html) VALUES(?,?,?,?,?,?)', nowIso(), name, k, String(input.description || '').slice(0, 400), english, html);
       const pid = Number(r.lastInsertRowid);
-      const obj = addCreation('library', cannedRecipe.machine(name, pid));
+      const obj = addCreation(featureZone('computer'), cannedRecipe.machine(name, pid));
       const slug = `${String(pid).padStart(3, '0')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'program'}`;
       const commit = await commitToGithub(slug, html, `Ash made: ${name}`);
       run('UPDATE programs SET object_id = ?, commit_url = ? WHERE id = ?', obj.id, commit.url || null, pid);

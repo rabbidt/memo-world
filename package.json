@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
     "demo": "node --disable-warning=ExperimentalWarning server/demo.js",
-    "test": "node --disable-warning=ExperimentalWarning test/brain.test.js"
+    "test": "node --disable-warning=ExperimentalWarning test/brain.test.js && node --disable-warning=ExperimentalWarning test/layout.test.js",
+    "layout": "node --disable-warning=ExperimentalWarning server/layout-check.js"
   },
   "repository": {
     "type": "git",

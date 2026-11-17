@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import express from 'express';
 import { config, demoMode, ROOT } from './config.js';
 import { all, get, run, nowIso, getState, setState, onChange, emit, logEvent } from './db.js';
-import { seedWorld, getZones, getObjects, getInventory, getMemo } from './world.js';
+import { seedWorld, getZones, getObjects, getInventory, getMemo, getTerrain } from './world.js';
 import { budgetSummary } from './budget.js';
 import { heartbeat, getNeeds, maturity, lifeStage, activeProject, localDay } from './brain.js';
 import { blockedReason, cleanText } from './filter.js';
@@ -50,7 +50,7 @@ const status = () => ({ demo: demoMode(), brain: getState('brain_status', { ok: 
 
 app.get('/api/me', anyone, (req, res) => res.json({ role: req.who.role, label: req.who.label }));
 app.get('/api/world', anyone, (req, res) => res.json({
-  zones: getZones(), objects: getObjects(), memo: memoView(), inventory: getInventory(),
+  zones: getZones(), terrain: getTerrain(), objects: getObjects(), memo: memoView(), inventory: getInventory(),
   parcels: all("SELECT id, from_name, kind FROM gifts WHERE status = 'waiting'"),
   project: activeProject(), programs: programsView(), status: status(),
   island: { name: getState('island_name', ''), english: getState('island_name_english', '') },
