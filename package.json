@@ -1,0 +1,33 @@
+{
+  "name": "memo-world",
+  "version": "0.1.0",
+  "description": "Memo, an autonomous creature living on a small 3D island.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "demo": "node --disable-warning=ExperimentalWarning server/demo.js",
+    "test": "node --disable-warning=ExperimentalWarning test/brain.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rabbidt/memo-world.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/rabbidt/memo-world/issues"
+  },
+  "homepage": "https://github.com/rabbidt/memo-world#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.9.0",
+    "adm-zip": "^0.6.1",
+    "dompurify": "^3.4.18",
+    "express": "^5.3.0",
+    "marked": "^18.2.1",
+    "three": "^0.187.0"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  }
+}

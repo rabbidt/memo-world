@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Memo's Island</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='56' r='38' fill='%2386ad5c'/><ellipse cx='50' cy='64' rx='24' ry='20' fill='%23f3e9cf'/><circle cx='38' cy='48' r='6' fill='%23222'/><circle cx='62' cy='48' r='6' fill='%23222'/><path d='M50 18 q14 -14 22 -2 q-12 8 -22 2' fill='%236fb04f'/></svg>">
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">
+  { "imports": {
+      "three": "/vendor/three/three.webgpu.js",
+      "three/webgpu": "/vendor/three/three.webgpu.js",
+      "three/tsl": "/vendor/three/three.tsl.js",
+      "three/addons/": "/vendor/three-addons/"
+  } }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="bubble"><div class="words"></div><div class="english"></div></div>
+
+  <header id="title">
+    <h1>Memo's Island</h1>
+    <p id="clock"></p>
+  </header>
+
+  <div id="controls">
+    <button id="btn-follow" title="Keep the camera on Memo">Follow Memo</button>
+    <button id="btn-find" title="Jump the camera to Memo">Find Memo</button>
+    <button id="btn-english" class="on" title="Show plain English under Memo's own words">English</button>
+    <button id="btn-panel" title="Show or hide the side panel">Panel</button>
+  </div>
+
+  <aside id="panel">
+    <nav id="tabs"></nav>
+    <div id="tab-body"></div>
+  </aside>
+
+  <div id="card" hidden></div>
+  <div id="modal" hidden><div id="modal-box"><header><strong id="modal-title"></strong><button id="modal-close">Close</button></header><div id="modal-body"></div></div></div>
+  <div id="toast" hidden></div>
+  <div id="gate" hidden><div><h1>Memo's Island</h1><p id="gate-msg"></p><p>Ask the island's Keeper for a link.</p></div></div>
+  <div id="loading">Waking the island…</div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
