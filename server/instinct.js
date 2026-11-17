@@ -1,7 +1,7 @@
 // Demo mode: with no API key (or MEMO_DEMO=1) Ash runs on these simple instincts instead of
 // Claude. It costs nothing and lets you see the island working before you add a key.
 import { get } from './db.js';
-import { getMemo, getZones } from './world.js';
+import { getMemo, getZones, featureZone } from './world.js';
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const P = (shape, size, position, color, material = 'matte', rotation = [0, 0, 0]) => ({ shape, size, position, rotation, color, material });
@@ -57,20 +57,20 @@ const THOUGHTS = [
 const IDEAS = ['a stack of my favourite pebbles', 'a jar that keeps a bit of evening light', 'something that turns in the wind', 'a chime from shells'];
 
 export async function demoTick(actions) {
-  const memo = getMemo(), zones = getZones();
+  const memo = getMemo(), zones = getZones(), home = featureZone('burrow'), board = featureZone('notice_board');
   const gifts = get("SELECT COUNT(*) AS n FROM gifts WHERE status = 'waiting'").n;
   const project = get("SELECT * FROM projects WHERE status = 'planned'");
   const ready = project && JSON.parse(project.supplies).every((s) => s.have >= s.qty);
   const roll = Math.random();
-  if (memo.energy < 20) { if (memo.zone !== 'nook') actions.move_to({ zone: 'nook' }); actions.nap({ minutes: 40 }); }
-  else if (gifts) { if (memo.zone !== 'board') actions.move_to({ zone: 'board' }); await actions.open_gift({ gift_id: 0 }); }
+  if (memo.energy < 20) { if (home && memo.zone !== home) actions.move_to({ zone: home }); actions.nap({ minutes: 40 }); }
+  else if (gifts && board) { if (memo.zone !== board) actions.move_to({ zone: board }); await actions.open_gift({ gift_id: 0 }); }
   else if (ready) { if (memo.zone !== project.zone_id) actions.move_to({ zone: project.zone_id }); actions.build({}); }
-  else if (roll < 0.3) actions.move_to({ zone: pick(zones.filter((z) => z.id !== memo.zone)).id });
+  else if (roll < 0.3 && zones.length > 1) actions.move_to({ zone: pick(zones.filter((z) => z.id !== memo.zone)).id });
   else if (roll < 0.6) actions.gather({});
   else if (roll < 0.7) actions.observe({ target: 'the ground nearby' });
   else if (roll < 0.8) await actions.craft({ idea: pick(IDEAS), materials: [] });
   else if (roll < 0.87) actions.write_journal({ title: 'Small things', body: 'Tiki day. I walked and I looked. The island is bigger than my feet think.', english: 'Small things. A little-by-little day. I walked and I looked. The island is bigger than my feet think.', mood: 'content' });
-  else if (roll < 0.92) { if (memo.zone !== 'board') actions.move_to({ zone: 'board' }); actions.make_wish({ text: 'A tiny bell, for the wind to ring.', english: 'A tiny bell, for the wind to ring.', reason: 'The island is very quiet.' }); }
+  else if (roll < 0.92 && board) { if (memo.zone !== board) actions.move_to({ zone: board }); actions.make_wish({ text: 'A tiny bell, for the wind to ring.', english: 'A tiny bell, for the wind to ring.', reason: 'The island is very quiet.' }); }
   else if (roll < 0.95 && !project) await actions.plan_building({ idea: 'a small round house for rainy days' });
   else actions.observe({ target: 'the sky' });
   const [words, english] = pick(THOUGHTS);

@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 
 // The island's shape. One function, used for the ground mesh and for standing things on it.
-const HILL = { x: 22, z: -21 }, POND = { x: -16, z: -6 };
+// Hills and hollows that belong to places (the lookout's hill, the pond's hollow) come from the server
+// with the world, so they move when the Keeper moves the place in the layout.
+let shaping = [{ x: 22, z: -21, lift: 3.4, radius: 7.5 }, { x: -16, z: -6, lift: -1.15, radius: 4.2 }];
+export function setTerrain(list) { if (Array.isArray(list)) shaping = list; }
 const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 const gauss = (x, z, c, r) => Math.exp(-((x - c.x) ** 2 + (z - c.z) ** 2) / (r * r));
 
@@ -12,8 +15,7 @@ export function heightAt(x, z) {
   let h = 1.35 * inland - 2.2 * smooth(31, 44, r);
   h += (Math.sin(x * 0.21 + 1.3) * Math.cos(z * 0.17) * 0.45 + Math.sin(x * 0.47 + z * 0.39) * 0.16 + Math.sin(z * 0.83 - x * 0.6) * 0.06) * inland;
   h += (Math.sin(x * 0.085 + 0.6) * Math.cos(z * 0.075 - 1.1) * 0.95 + Math.sin(x * 0.05 - z * 0.06 + 2) * 0.5) * inland; // rolling ground
-  h += 3.4 * gauss(x, z, HILL, 7.5);
-  h -= 1.15 * gauss(x, z, POND, 4.2);
+  for (const s of shaping) h += s.lift * gauss(x, z, s, s.radius);
   return h;
 }
 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
+import { heightAt, setTerrain, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
 import { builders, lamps, glows } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
@@ -118,7 +118,7 @@ const pickable = [];
 
 function placeObject(o) {
   const build = builders[o.kind];
-  if (!build) return;
+  if (!build && !models[o.kind]) return; // a kind with neither a built-in shape nor a model is left out
   let g;
   if (models[o.kind]) { g = new THREE.Group(); g.add(models[o.kind].clone(true)); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
   else g = build(o);
@@ -291,6 +291,7 @@ async function start() {
   let data;
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
+  setTerrain(data.terrain);
   scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones), buildCobbles(data.zones));
   await loadModels();
   for (const o of data.objects) placeObject(o);

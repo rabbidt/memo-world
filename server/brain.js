@@ -10,7 +10,7 @@ import { RECIPE_SCHEMA, sanitizeRecipe } from './recipe.js';
 import { cleanText, blockedReason } from './filter.js';
 import {
   getZones, getZone, getMemo, updateMemo, getInventory, addItem, takeItem,
-  addCreation, addSite, removeObject, moveObject, addPet, movePets,
+  featureZone, addCreation, addSite, removeObject, moveObject, addPet, movePets,
 } from './world.js';
 import { demoTick, cannedRecipe } from './instinct.js';
 
@@ -271,7 +271,7 @@ export const actions = {
     updateMemo({ zone, ...placeInZone(zone), activity: 'walking', energy: memo.energy - 4 });
     logEvent('move', `Walked to the ${z.name}.`, { zone });
     shiftNeeds({ curiosity: -4 });
-    const gifts = zone === 'board' ? get("SELECT COUNT(*) AS n FROM gifts WHERE status = 'waiting'").n : 0;
+    const gifts = zone === featureZone('notice_board') ? get("SELECT COUNT(*) AS n FROM gifts WHERE status = 'waiting'").n : 0;
     return `You walk to the ${z.name}. ${z.description}${gifts ? ` There ${gifts === 1 ? 'is a parcel' : `are ${gifts} parcels`} waiting here!` : ''}`;
   },
   observe({ target }) {
@@ -369,7 +369,8 @@ export const actions = {
     return 'You close the notebook. It is written.';
   },
   make_wish({ text, english, reason }) {
-    if (getMemo().zone !== 'board') return 'Wishes are pinned at the notice board. Go there first.';
+    if (!featureZone('notice_board')) return 'There is no notice board on the island, so there is nowhere to pin a wish.';
+    if (getMemo().zone !== featureZone('notice_board')) return 'Wishes are pinned at the notice board. Go there first.';
     if (get("SELECT COUNT(*) AS n FROM wishes WHERE status = 'open' AND project_id IS NULL").n >= 3) return 'The board already holds three of your wishes. Wait for an answer before pinning more.';
     run('INSERT INTO wishes(ts, text, english, reason) VALUES(?,?,?,?)', nowIso(), String(text).slice(0, 300), String(english || text).slice(0, 300), String(reason || '').slice(0, 300));
     emit('wishes'); updateMemo({ activity: 'writing' });
@@ -377,7 +378,8 @@ export const actions = {
     return 'You pin the wish to the board. Now to wait and see.';
   },
   async open_gift({ gift_id }) {
-    if (getMemo().zone !== 'board') return 'The parcels are by the notice board. Go there first.';
+    if (!featureZone('notice_board')) return 'There is no notice board on the island, so no parcels can arrive.';
+    if (getMemo().zone !== featureZone('notice_board')) return 'The parcels are by the notice board. Go there first.';
     const g = get("SELECT * FROM gifts WHERE id = ? AND status = 'waiting'", gift_id) || get("SELECT * FROM gifts WHERE status = 'waiting' ORDER BY id LIMIT 1");
     if (!g) return 'There is no parcel waiting.';
     run("UPDATE gifts SET status = 'opened', opened_at = ? WHERE id = ?", nowIso(), g.id);
@@ -394,11 +396,11 @@ export const actions = {
       recipe ||= cannedRecipe(g.name, false, isPet);
       emit('gifts'); updateMemo({ activity: 'gathering', mood: 'delighted' });
       if (isPet) {
-        const pet = addPet('board', recipe);
+        const pet = addPet(getMemo().zone, recipe);
         logEvent('pet', `A parcel from ${g.from_name} held a living creature: ${g.name}! Named it "${recipe.name}" (#${pet.id}). It lives on the island now.${g.note ? ` The note said: "${g.note}"` : ''}`, { object_id: pet.id }, 5);
         return `The basket from ${g.from_name} wriggles... and out climbs ${g.name}! You name it "${recipe.name}" (#${pet.id}). It lives on the island with you now.${g.note ? ` A note says: "${g.note}"` : ''}`;
       }
-      const obj = addCreation('board', recipe, null, g.from_name);
+      const obj = addCreation(getMemo().zone, recipe, null, g.from_name);
       logEvent('gift', `Opened a parcel from ${g.from_name}: a special thing, "${recipe.name}" (#${obj.id}), now standing by the notice board.${g.note ? ` The note said: "${g.note}"` : ''}`, { object_id: obj.id }, 5);
       return `Inside the parcel from ${g.from_name}: "${recipe.name}" (#${obj.id})! It stands by the notice board now; you can carry it elsewhere with rearrange.${g.note ? ` A note says: "${g.note}"` : ''}`;
     }
@@ -466,7 +468,7 @@ export const actions = {
   nap({ minutes }) {
     const mins = Math.max(20, Math.min(120, Math.round(minutes) || 40));
     const memo = getMemo();
-    updateMemo({ activity: 'napping', napUntil: Date.now() + mins * 60000, energy: memo.energy + mins * (memo.zone === 'nook' ? 0.6 : 0.35) });
+    updateMemo({ activity: 'napping', napUntil: Date.now() + mins * 60000, energy: memo.energy + mins * (memo.zone === featureZone('burrow') ? 0.6 : 0.35) });
     logEvent('nap', `Curled up for a ${mins} minute nap at the ${getZone(memo.zone).name}.`);
     return `You curl up and drift off for about ${mins} minutes.`;
   },
@@ -575,7 +577,8 @@ export async function heartbeat(force = false) {
     }
     if (isNight() && !force) {
       if (memo.asleep !== 'night') {
-        updateMemo({ asleep: 'night', activity: 'sleeping', zone: 'nook', ...placeInZone('nook'), napUntil: null });
+        const home = featureZone('burrow');
+        updateMemo({ asleep: 'night', activity: 'sleeping', ...(home ? { zone: home, ...placeInZone(home) } : {}), napUntil: null });
         try { await reflect(); } catch (e) { reportError(e); }
         updateMemo({ thought: 'zzz', thoughtEnglish: 'Asleep in the nook until morning.' });
         logEvent('sleep', 'Went to bed in the nook.');
