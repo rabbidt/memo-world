@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, buildTerrain, buildGrass } from './terrain.js';
+import { heightAt, buildTerrain, buildGrass, buildFlowers } from './terrain.js';
 import { builders, lamps, glows } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Memo } from './memo.js';
@@ -19,7 +19,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog('#cfe9f5', 110, 300);
+scene.fog = new THREE.Fog('#cfe9f5', 150, 460);
 const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 600);
 camera.position.set(30, 21, 38);
 const controls = new OrbitControls(camera, canvas);
@@ -55,9 +55,9 @@ const stars = new THREE.InstancedMesh(new THREE.SphereGeometry(1.1, 5, 4), new T
 
 // ---------- sea ----------
 const sea = new THREE.Mesh(new THREE.CircleGeometry(400, 64).rotateX(-Math.PI / 2),
-  new THREE.MeshStandardMaterial({ color: '#3d9ea6', roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.84 }));
+  new THREE.MeshStandardMaterial({ color: '#7fcfc9', roughness: 0.18, metalness: 0.05, transparent: true, opacity: 0.8 }));
 sea.receiveShadow = true; scene.add(sea);
-const seaFloor = new THREE.Mesh(new THREE.CircleGeometry(400, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#1f6f7d' }));
+const seaFloor = new THREE.Mesh(new THREE.CircleGeometry(400, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#4fa9b0' }));
 seaFloor.position.y = -3; scene.add(seaFloor);
 
 // ---------- clouds and fireflies ----------
@@ -77,7 +77,7 @@ scene.add(flies);
 const forcedHour = params.get('hour') !== null ? Number(params.get('hour')) : null;
 const hourNow = () => { if (forcedHour !== null) return forcedHour; const d = new Date(); return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600; };
 const K = (h) => new THREE.Color(h), mix = (a, b, t) => a.clone().lerp(b, Math.min(1, Math.max(0, t)));
-const SKY = { dayTop: K('#2f80dc'), dayLow: K('#bfe3f5'), duskTop: K('#4b5fa5'), duskLow: K('#ffb074'), nightTop: K('#070b1f'), nightLow: K('#1a2a4d') };
+const SKY = { dayTop: K('#5fa8e6'), dayLow: K('#e9e3d0'), duskTop: K('#6f74b5'), duskLow: K('#ffbf8f'), nightTop: K('#0c1230'), nightLow: K('#27365f') };
 let night = 0;
 function applyTime() {
   const h = hourNow(), ang = ((h - 6) / 12) * Math.PI, elev = Math.sin(ang);
@@ -97,17 +97,18 @@ function applyTime() {
   // one shadow-casting light: the sun by day, the moon by night
   const lightDir = night > 0.6 ? moonDir : dir.clone().setY(Math.max(dir.y, 0.12)).normalize();
   sun.position.copy(lightDir).multiplyScalar(120); sun.target.position.set(0, 0, 0);
-  sun.color.copy(night > 0.6 ? K('#9fb7ff') : mix(K('#fff1d0'), K('#ff9d5c'), golden * 0.9));
-  sun.intensity = night > 0.6 ? 0.9 : 0.5 + day * 2.9;
-  hemi.color.copy(mix(K('#3a4c85'), K('#dff1ff'), day)); hemi.groundColor.copy(mix(K('#1b2540'), K('#7a9a63'), day));
-  hemi.intensity = 0.6 + day * 0.6;
+  sun.color.copy(night > 0.6 ? K('#a9bfff') : mix(K('#ffe9c4'), K('#ffa46a'), golden * 0.9));
+  sun.intensity = night > 0.6 ? 0.9 : 0.5 + day * 2.5;
+  hemi.color.copy(mix(K('#3a4c85'), K('#ffeedd'), day)); hemi.groundColor.copy(mix(K('#1b2540'), K('#b7c98a'), day));
+  hemi.intensity = 0.6 + day * 0.3;
   stars.visible = night > 0.2; stars.material.opacity = night;
-  sea.material.color.copy(mix(K('#12304f'), K('#3d9ea6'), day).lerp(K('#c9786a'), golden * 0.25));
+  sea.material.color.copy(mix(K('#16365a'), K('#7fcfc9'), day).lerp(K('#c9786a'), golden * 0.25));
   cloudMat.color.copy(mix(K('#39456b'), K('#ffffff'), day).lerp(K('#ffc9a1'), golden * 0.6));
   for (const l of lamps) { l.light.intensity = night * 22 * l.power; l.bulb.material.emissiveIntensity = 0.15 + night * 3; }
   for (const g of glows) g.material.emissiveIntensity = 0.1 + night * 2.4;
   flies.visible = night > 0.4;
-  renderer.toneMappingExposure = 1.05 - night * 0.1;
+  renderer.toneMappingExposure = 0.98 - night * 0.02;
+  seaFloor.material.color.copy(mix(K('#0f2440'), K('#4fa9b0'), day));
 }
 
 // ---------- the world from the database ----------
@@ -118,7 +119,9 @@ const pickable = [];
 function placeObject(o) {
   const build = builders[o.kind];
   if (!build) return;
-  const g = build(o);
+  let g;
+  if (models[o.kind]) { g = new THREE.Group(); g.add(models[o.kind].clone(true)); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
+  else g = build(o);
   g.position.set(o.x, heightAt(o.x, o.z), o.z);
   if (!g.userData.noRotate) g.rotation.y = o.rot || 0;
   if (o.kind !== 'creation' && o.kind !== 'pet') g.scale.setScalar(o.scale || 1);
@@ -224,20 +227,63 @@ function updatePet(g, dt, t) {
   p.y = heightAt(p.x, p.z);
 }
 
-// Soft bloom when the renderer supports it; plain rendering otherwise.
+// The diorama look: soft contact shadows (ambient occlusion), a gentle depth of field that keeps
+// whatever the camera looks at sharp, and a little glow. Each effect is optional: if one cannot
+// be built on this machine it is skipped, and ?fx=0 turns them all off.
 let render = () => renderer.render(scene, camera);
-async function setupBloom() {
-  if (params.get('bloom') === '0') return;
+let focusUniform = null;
+async function setupEffects() {
+  if (params.get('fx') === '0' || params.get('bloom') === '0') return;
+  let pipeline, out, scenePass;
   try {
-    const { pass } = await import('three/tsl');
-    const { bloom } = await import('three/addons/tsl/display/BloomNode.js');
+    const TSL = await import('three/tsl');
     const Pipeline = THREE.RenderPipeline || THREE.PostProcessing;
-    const pipeline = new Pipeline(renderer);
-    const scenePass = pass(scene, camera), color = scenePass.getTextureNode('output');
-    pipeline.outputNode = color.add(bloom(color, 0.28, 0.6, 0.92));
-    render = () => pipeline.render();
-  } catch (e) { console.warn('Bloom is not available here; rendering without it.', e); }
+    pipeline = new Pipeline(renderer);
+    scenePass = TSL.pass(scene, camera);
+    out = scenePass.getTextureNode('output');
+    const tryFx = async (name, fn) => { if (params.get(name) === '0') return; try { out = await fn(TSL); } catch (e) { console.warn(`Effect "${name}" is not available here; skipping it.`, e); } };
+    await tryFx('ao', async () => {
+      const { ao } = await import('three/addons/tsl/display/GTAONode.js');
+      const aoPass = ao(scenePass.getTextureNode('depth'), null, camera);
+      aoPass.resolutionScale = 0.5; aoPass.radius.value = 1.1; aoPass.thickness.value = 1.4; aoPass.scale.value = 1.25;
+      const shade = aoPass.getTextureNode().r;
+      return out.mul(TSL.vec4(TSL.mix(TSL.vec3(0.42, 0.36, 0.44), TSL.vec3(1), shade), 1));
+    });
+    await tryFx('dof', async () => {
+      const { dof } = await import('three/addons/tsl/display/DepthOfFieldNode.js');
+      focusUniform = { distance: TSL.uniform(40), range: TSL.uniform(40) };
+      return dof(out, scenePass.getViewZNode(), focusUniform.distance, focusUniform.range, 1.2);
+    });
+    await tryFx('glow', async () => {
+      const { bloom } = await import('three/addons/tsl/display/BloomNode.js');
+      return out.add(bloom(out, 0.22, 0.6, 1.0));
+    });
+    pipeline.outputNode = out;
+    render = () => {
+      if (focusUniform) { const d = camera.position.distanceTo(controls.target); focusUniform.distance.value = d; focusUniform.range.value = Math.max(8, d * 1.15); }
+      pipeline.render();
+    };
+  } catch (e) { console.warn('Effects are not available here; rendering without them.', e); }
 }
+
+// Hand-made models (GLB) can replace any procedural mesh: list them in web/assets/models/manifest.json
+// as {"models":[{"name":"library_tower","file":"library_tower.glb"}]}. The name is the object's kind,
+// or memo_childlike / memo_young / memo_growing_up / memo_grown for Memo himself.
+const models = {};
+async function loadModels() {
+  let manifest;
+  try { const r = await fetch('/assets/models/manifest.json'); if (!r.ok) return; manifest = await r.json(); } catch { return; }
+  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  await Promise.all((manifest.models || []).map(async (m) => {
+    try {
+      const gltf = await loader.loadAsync(`/assets/models/${m.file}`);
+      gltf.scene.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      models[m.name] = gltf.scene;
+    } catch (e) { console.warn(`Could not load model ${m.file}; using the built-in shape.`, e); }
+  }));
+}
+const stageKey = (stage) => `memo_${String(stage).replace(/ /g, '_')}`;
 
 // ---------- start ----------
 let ui;
@@ -245,13 +291,15 @@ async function start() {
   let data;
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
-  scene.add(buildTerrain(data.zones), buildGrass(data.zones));
+  scene.add(buildTerrain(data.zones), buildGrass(data.zones), buildFlowers(data.zones));
+  await loadModels();
   for (const o of data.objects) placeObject(o);
+  world.memo.models = Object.fromEntries(Object.entries(models).filter(([k]) => k.startsWith('memo_')));
   world.memo.setState(data.memo);
   ui = await initUI({ world, data, focusOn, setFollow, refreshBoard });
   await renderer.init();
   resize(); applyTime();
-  await setupBloom();
+  await setupEffects();
   document.body.dataset.backend = renderer.backend?.isWebGPUBackend ? 'WebGPU' : 'WebGL 2';
   renderer.setAnimationLoop(frame);
   document.body.classList.add('ready');

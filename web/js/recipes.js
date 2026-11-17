@@ -24,7 +24,7 @@ export function material(kind, color) {
     case 'glass': m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.05, transparent: true, opacity: 0.45 }); break;
     case 'glow': m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1.8, roughness: 0.5 }); break;
     case 'wood': m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.78 }); break;
-    case 'stone': case 'moss': m = new THREE.MeshStandardMaterial({ color: c, roughness: 1, flatShading: kind === 'stone' }); break;
+    case 'stone': case 'moss': m = new THREE.MeshStandardMaterial({ color: c, roughness: 1 }); break;
     default: m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 });
   }
   cache.set(key, m);

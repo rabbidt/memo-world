@@ -17,8 +17,8 @@ export function heightAt(x, z) {
 }
 
 const C = (hex) => new THREE.Color(hex);
-const SAND = C('#e9d8a6'), SAND_WET = C('#cdb98a'), GRASS = C('#8fbf5f'), GRASS_DARK = C('#5f9a4a'), MOSS = C('#a9cf6b'),
-  PATH = C('#d7bd8c'), ROCK = C('#9aa08f'), SEABED = C('#3f8f8c');
+const SAND = C('#f3e3bd'), SAND_WET = C('#dcc79a'), GRASS = C('#98c964'), GRASS_DARK = C('#6fab52'), MOSS = C('#b9d877'),
+  PATH = C('#ead3a4'), ROCK = C('#b9b3a3'), SEABED = C('#69b9b4');
 
 function distToSegment(px, pz, ax, az, bx, bz) {
   const dx = bx - ax, dz = bz - az;
@@ -61,7 +61,7 @@ export function buildTerrain(zones) {
 
 // Thousands of grass blades in one draw call.
 export function buildGrass(zones) {
-  const blade = new THREE.ConeGeometry(0.05, 0.38, 3, 1);
+  const blade = new THREE.ConeGeometry(0.06, 0.34, 4, 1);
   blade.translate(0, 0.19, 0);
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1 });
   const count = 9000;
@@ -85,7 +85,7 @@ export function buildGrass(zones) {
     s.set(k, k * (0.8 + rand() * 0.8), k);
     m.compose(p, q, s);
     mesh.setMatrixAt(n, m);
-    c.setHSL(0.24 + rand() * 0.08, 0.5 + rand() * 0.15, 0.36 + rand() * 0.16);
+    c.setHSL(0.23 + rand() * 0.08, 0.5 + rand() * 0.14, 0.42 + rand() * 0.16);
     mesh.setColorAt(n, c);
     n++;
   }
@@ -93,4 +93,32 @@ export function buildGrass(zones) {
   mesh.instanceMatrix.needsUpdate = true;
   mesh.receiveShadow = true;
   return mesh;
+}
+
+// Wildflowers everywhere, in clumps: two draw calls (stems and heads).
+export function buildFlowers(zones) {
+  const count = 2600, group = new THREE.Group();
+  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.5, 8, 6), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8 }), count);
+  const stems = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 4), new THREE.MeshStandardMaterial({ color: '#7fb565', roughness: 1 }), count);
+  const PETALS = ['#f7b7cd', '#fbe08a', '#ffffff', '#cdb4f0', '#f6a98a', '#a9d8ef', '#fdf3c8'];
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), c = new THREE.Color();
+  let seed = 99, n = 0, guard = 0;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  while (n < count && guard++ < 4000) {
+    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 33, cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+    const colour = PETALS[Math.floor(rand() * PETALS.length)], clump = 4 + Math.floor(rand() * 9);
+    for (let i = 0; i < clump && n < count; i++) {
+      const x = cx + (rand() - 0.5) * 2.4, z = cz + (rand() - 0.5) * 2.4, h = heightAt(x, z);
+      if (h < 0.9 || h > 4) continue;
+      if (zones.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.radius * 0.42)) continue;
+      const tall = 0.16 + rand() * 0.22, size = 0.1 + rand() * 0.08;
+      m.compose(p.set(x, h + tall / 2, z), q.identity(), s.set(0.025, tall, 0.025)); stems.setMatrixAt(n, m);
+      m.compose(p.set(x, h + tall, z), q.identity(), s.set(size, size * 0.6, size)); heads.setMatrixAt(n, m);
+      heads.setColorAt(n, c.set(colour).offsetHSL(0, 0, (rand() - 0.5) * 0.06));
+      n++;
+    }
+  }
+  heads.count = stems.count = n; heads.castShadow = true;
+  group.add(stems, heads);
+  return group;
 }
