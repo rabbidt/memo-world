@@ -6,6 +6,7 @@ import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
 import { api, stream, params } from './api.js';
 import { initUI } from './ui.js';
+import { sunPosition, moon, season } from './almanac.js';
 import { loadLayout, buildDressing, registerGlow, addLamp, LANDMARKS } from './dressing.js';
 
 const canvas = document.getElementById('scene');
@@ -41,7 +42,8 @@ sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.06;
 scene.add(sun, sun.target);
 const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(9, 20, 12), new THREE.MeshBasicMaterial({ color: '#fff2c9', fog: false, toneMapped: false }));
 const moonDisc = new THREE.Mesh(new THREE.SphereGeometry(6, 20, 12), new THREE.MeshBasicMaterial({ color: '#e8eefc', fog: false, toneMapped: false }));
-scene.add(sunDisc, moonDisc);
+const moonShade = new THREE.Mesh(new THREE.SphereGeometry(6.15, 20, 12), new THREE.MeshBasicMaterial({ color: '#0c1230', fog: false, toneMapped: false })); // hides the unlit part of the moon
+scene.add(sunDisc, moonDisc, moonShade);
 
 const stars = new THREE.InstancedMesh(new THREE.SphereGeometry(1.1, 5, 4), new THREE.MeshBasicMaterial({ color: '#ffffff', fog: false, transparent: true, toneMapped: false }), 420);
 {
@@ -75,14 +77,23 @@ const flySeeds = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r:
 scene.add(flies);
 
 // ---------- time of day ----------
+// The sky follows the real sun, moon and season over London. ?hour=16.5 and ?date=2026-04-20 preview other moments.
 const forcedHour = params.get('hour') !== null ? Number(params.get('hour')) : null;
-const hourNow = () => { if (forcedHour !== null) return forcedHour; const d = new Date(); return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600; };
+const forcedDate = params.get('date');
+function skyDate() {
+  const d = forcedDate ? new Date(`${forcedDate}T12:00:00`) : new Date();
+  if (forcedHour !== null) d.setHours(Math.floor(forcedHour), Math.round((forcedHour % 1) * 60), 0, 0);
+  return d;
+}
+const toDir = (p) => { const el = p.elevation * Math.PI / 180, az = p.azimuth * Math.PI / 180; return new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)); };
+const SEASON = season(skyDate());
+if (SEASON.frost && skyDate().getHours() >= 10) SEASON.frost = 0; // frost is gone by mid-morning
 const K = (h) => new THREE.Color(h), mix = (a, b, t) => a.clone().lerp(b, Math.min(1, Math.max(0, t)));
 const SKY = { dayTop: K('#74aee0'), dayLow: K('#f4dfc2'), duskTop: K('#6f74b5'), duskLow: K('#ffbf8f'), nightTop: K('#0c1230'), nightLow: K('#27365f') };
 let night = 0;
 function applyTime() {
-  const h = hourNow(), ang = ((h - 6) / 12) * Math.PI, elev = Math.sin(ang);
-  const day = THREE.MathUtils.smoothstep(elev, -0.12, 0.3), golden = Math.max(0, 1 - Math.abs(elev - 0.05) / 0.3);
+  const now = skyDate(), sunAt = sunPosition(now), elev = Math.sin(sunAt.elevation * Math.PI / 180);
+  const day = THREE.MathUtils.smoothstep(elev, -0.1, 0.16), golden = Math.max(0, 1 - Math.abs(elev - 0.05) / 0.3);
   night = 1 - THREE.MathUtils.smoothstep(elev, -0.2, 0.08);
   const top = mix(mix(SKY.nightTop, SKY.dayTop, day), SKY.duskTop, golden * 0.75);
   const low = mix(mix(SKY.nightLow, SKY.dayLow, day), SKY.duskLow, golden * 0.9);
@@ -90,16 +101,22 @@ function applyTime() {
   for (let i = 0; i < pos.count; i++) { const t = Math.pow(Math.max(0, pos.getY(i) / 400), 0.55); c.copy(low).lerp(top, t); col.setXYZ(i, c.r, c.g, c.b); }
   col.needsUpdate = true;
   scene.fog.color.copy(mix(low, K('#ffd9b0'), day * 0.45 + golden * 0.3)); // warm haze
-  const dir = new THREE.Vector3(Math.cos(ang) * 0.9, Math.max(elev, -0.3), 0.45).normalize();
+  const dir = toDir(sunAt);
   sunDisc.position.copy(dir).multiplyScalar(360); sunDisc.visible = elev > -0.08;
   sunDisc.material.color.copy(mix(K('#fff6dd'), K('#ffb36b'), golden));
-  const moonDir = new THREE.Vector3(-Math.cos(ang) * 0.8, Math.max(-elev, 0.25), -0.5).normalize();
-  moonDisc.position.copy(moonDir).multiplyScalar(360); moonDisc.visible = night > 0.3;
+  // The moon trails the sun by its phase, so a full moon rises as the sun sets.
+  const lune = moon(now), moonAt = sunPosition(new Date(now.getTime() - lune.phase * 24.84 * 3600000));
+  const moonUp = moonAt.elevation > -2, moonTrue = toDir(moonAt);
+  moonDisc.position.copy(moonTrue).multiplyScalar(360); moonDisc.visible = moonUp && night > 0.15;
+  const side = new THREE.Vector3().crossVectors(moonTrue, new THREE.Vector3(0, 1, 0)).normalize().multiplyScalar((lune.phase < 0.5 ? 1 : -1) * 12.4 * lune.lit);
+  moonShade.position.copy(moonTrue).multiplyScalar(352).add(side); moonShade.visible = moonDisc.visible && lune.lit < 0.97;
+  moonShade.material.color.copy(top);
+  const moonDir = moonTrue.clone().setY(Math.max(moonTrue.y, 0.3)).normalize();
   // one shadow-casting light: the sun by day, the moon by night
   const lightDir = night > 0.6 ? moonDir : dir.clone().setY(Math.min(Math.max(dir.y, 0.14), 0.62)).normalize(); // kept low for long soft shadows
   sun.position.copy(lightDir).multiplyScalar(120); sun.target.position.set(0, 0, 0);
   sun.color.copy(night > 0.6 ? K('#a9bfff') : mix(K('#ffdfae'), K('#ff9e64'), golden * 0.9));
-  sun.intensity = night > 0.6 ? 0.9 : 0.5 + day * 2.9;
+  sun.intensity = night > 0.6 ? 0.25 + (moonUp ? 0.7 * lune.lit : 0) : 0.5 + day * 2.9;
   hemi.color.copy(mix(K('#3a4c85'), K('#ffe9d2'), day)); hemi.groundColor.copy(mix(K('#1b2540'), K('#c4c98a'), day));
   hemi.intensity = 0.6 + day * 0.22;
   stars.visible = night > 0.2; stars.material.opacity = night;
