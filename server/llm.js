@@ -14,7 +14,14 @@ export async function callClaude(purpose, params) {
   if (!canAfford(params.model, chars, params.max_tokens)) throw new BudgetError('monthly cap reached');
   const withEffort = params.model === 'claude-haiku-4-5' ? { ...params } : { output_config: { effort: params.effort || 'low' }, ...params };
   delete withEffort.effort;
-  const res = await anthropic().messages.create(withEffort);
+  let res;
+  try { res = await anthropic().messages.create(withEffort); }
+  catch (e) {
+    // If this model does not take the effort setting, carry on without it rather than leave Ash stuck.
+    if (e?.status !== 400 || !withEffort.output_config || !/effort|output_config/i.test(String(e?.message))) throw e;
+    delete withEffort.output_config;
+    res = await anthropic().messages.create(withEffort);
+  }
   let cost = record(params.model, purpose, res.usage);
   const searches = res.usage?.server_tool_use?.web_search_requests || 0;
   if (searches) {

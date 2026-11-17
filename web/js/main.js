@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { heightAt, baseHeightAt, streamDistance, setTerrain, setSeason, setStream, buildStream, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
+import { heightAt, baseHeightAt, streamDistance, streamDirection, fallDirection, setTerrain, setSeason, setStream, buildStream, buildTerrain, buildGrass, buildFlowers, buildCobbles } from './terrain.js';
 import { builders, lamps, glows, fires } from './builders.js';
 import { animateRecipe } from './recipes.js';
 import { Ash } from './memo.js';
@@ -155,7 +155,7 @@ function applyTime() {
   for (const l of lamps) { l.light.intensity = night * 22 * l.power; l.bulb.material.emissiveIntensity = 0.15 + night * 3; }
   for (const g of glows) g.material.emissiveIntensity = 0.1 + night * 2.4;
   flies.visible = night > 0.4;
-  for (const f of fires) f.visible = night > 0.12 && !SEASON.snow;
+  for (const f of fires) f.node.visible = night > 0.12 && !SEASON.snow;
   renderer.toneMappingExposure = 1.12 - night * 0.14;
   seaFloor.material.color.copy(mix(K('#0f2440'), K('#4fa9b0'), day));
 }
@@ -164,6 +164,7 @@ function applyTime() {
 const world = { zones: [], objects: new Map(), memo: new Ash(), parcels: [], data: null };
 scene.add(world.memo.root);
 const pickable = [];
+const flowing = [], domes = []; // scrolling water textures and turning observatory domes on the models
 const SCENERY = new Set(['tree', 'pine', 'rock', 'bush', 'mushrooms', 'flower_patch', 'lantern', 'bench', 'stump', 'wall']);
 
 function placeObject(o) {
@@ -177,11 +178,18 @@ function placeObject(o) {
   const lay = dressed && LANDMARKS.has(o.kind) && dressed.items.find((it) => it.name === o.kind && it.home === o.zone_id);
   if (lay) o = { ...o, x: lay.x, z: lay.z, rot: lay.rotY, scale: lay.scale };
   let g;
-  if (models[o.kind]) { g = new THREE.Group(); const copy = models[o.kind].clone(true); g.add(copy); addLamp(g, copy); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
+  if (models[o.kind]) { g = new THREE.Group(); const copy = models[o.kind].clone(true); g.add(copy); addLamp(g, copy);
+    const flame = copy.getObjectByName('Flame'); if (flame) fires.push({ node: flame, base: flame.scale.y });
+    const dome = copy.getObjectByName('Dome'); if (dome) domes.push(dome);
+    if (o.kind === 'waterfall') copy.traverse((n) => { if (n.isMesh && n.name.startsWith('Water') && n.material.map) { n.material = n.material.clone(); n.material.map = n.material.map.clone(); n.material.map.wrapT = THREE.RepeatWrapping; flowing.push(n.material.map); } }); if (o.kind === 'notice_board') { g.userData.notes = new THREE.Group(); g.userData.notes.position.set(0, 1.45, 0.1); g.userData.parcels = new THREE.Group(); g.userData.parcels.position.set(0, 0, 1.3); g.add(g.userData.notes, g.userData.parcels); } }
   else g = build(o);
   g.position.set(o.x, o.kind === 'bridge' ? baseHeightAt(o.x, o.z) + 0.1 : heightAt(o.x, o.z), o.z);
   if (!g.userData.noRotate) g.rotation.y = o.rot || 0;
+  // Water decides how these two face: the fall pours downstream, and the bridge crosses the stream square on.
+  if (o.kind === 'waterfall' && fallDirection()) { const d = fallDirection(); g.rotation.y = Math.atan2(d.x, d.z); }
+  if (o.kind === 'bridge' && streamDirection(o.x, o.z)) { const d = streamDirection(o.x, o.z); g.rotation.y = Math.atan2(d.x, d.z) + Math.PI / 2; g.position.y = baseHeightAt(o.x, o.z) - (models.bridge ? 0.12 : -0.1); }
   if (o.kind !== 'creation' && o.kind !== 'pet') g.scale.setScalar(o.scale || 1);
+  if (o.kind === 'waterfall' && models.waterfall && fallDirection()) g.scale.setScalar(fallDirection().scale);
   if (g.userData.followGround) {
     g.rotation.y = 0;
     const done = new Set();
@@ -251,7 +259,9 @@ function frame() {
     if (g.userData.pet) updatePet(g, dt, t);
   }
   updateWeather(dt, t);
-  fires.forEach((f, i) => { if (f.visible) f.scale.y = (i % 2 ? 0.45 : 0.7) * (1 + Math.sin(t * 9 + i * 2) * 0.12 + Math.sin(t * 17 + i) * 0.06); });
+  fires.forEach((f, i) => { if (f.node.visible) f.node.scale.y = f.base * (1 + Math.sin(t * 9 + i * 2) * 0.12 + Math.sin(t * 17 + i) * 0.06); });
+  for (const w of flowing) w.offset.y -= dt * 0.7;
+  for (const d of domes) d.rotation.y = Math.sin(t * 0.05) * 1.2;
   sea.position.y = Math.sin(t * 0.5) * 0.06;
   for (const c of clouds.children) { c.position.x += c.userData.speed * dt; if (c.position.x > 150) c.position.x = -150; }
   if (flies.visible) flySeeds.forEach((f, i) => {
@@ -353,7 +363,7 @@ async function loadModels() {
   try { const r = await fetch('/assets/models/manifest.json'); if (!r.ok) return; manifest = await r.json(); } catch { return; }
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
   const loader = new GLTFLoader();
-  await Promise.all((manifest.models || []).map(async (m) => {
+  await Promise.all((manifest.models || []).filter((m) => !/_lod\d$/.test(m.name)).map(async (m) => { // distance versions are not used yet
     try {
       const gltf = await loader.loadAsync(`/assets/models/${m.file}`);
       gltf.scene.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
@@ -370,6 +380,7 @@ async function start() {
   let data;
   try { data = await api('world'); } catch (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = e.message; return; }
   world.data = data; world.zones = data.zones;
+  await loadModels();
   setTerrain(data.terrain);
   { // the stream runs through the places its row in the layout names
     const row = data.objects.find((o) => o.kind === 'stream'), zone = (id) => data.zones.find((z) => z.id === String(id).trim());
@@ -382,13 +393,12 @@ async function start() {
         pull(route[0], next, 2.6); // the spring rises just off the summit
         const pondObj = data.objects.find((o) => o.kind === 'pond' && o.zone_id === end.id);
         if (pondObj) pull(route.at(-1), route.at(-2), 4.4 * (pondObj.scale || 1));
-        setStream(route, { width: Number(row.params.width) || 1.2, waterfall: route.find((p) => p.id === fallZone) || null,
+        setStream(route, { width: Number(row.params.width) || 1.2, waterfall: (() => { const f = route.find((p) => p.id === fallZone); return f ? (models.waterfall ? { ...f, model: true, summit: { x: first.x, z: first.z } } : f) : null; })(),
           endLevel: pondObj ? baseHeightAt(end.x, end.z) + 0.04 : -Infinity,
-          bridgeSpots: data.objects.filter((o) => o.kind === 'bridge').map((o) => ({ x: o.x, z: o.z })) });
+          bridgeSpots: data.objects.filter((o) => o.kind === 'bridge').map((o) => ({ x: o.x, z: o.z, rise: models.bridge ? 0.95 : 0.54 })) });
       }
     }
   }
-  await loadModels();
   const layout = params.get('models') === '0' ? null : await loadLayout();
   if (layout && layout.some((it) => models[it.name])) {
     const items = fitDressing(layout, data.zones, data.objects);

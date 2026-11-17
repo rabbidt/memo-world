@@ -8,8 +8,10 @@ import random
 
 from mathutils import Vector, Matrix
 
-from memo_lib import (PI, Asset, sphere, ico, box, cyl, lathe, dome, torus, tube, arc, leaf, disc, prism,
-                      displace, blob, align_z, TRS)
+import bmesh
+
+from memo_lib import (PI, Asset, lin, sphere, ico, box, cyl, lathe, dome, torus, tube, arc, leaf, disc, prism,
+                      displace, blob, align_z, TRS, block, boulder, tile_shape)
 from memo_char import C, shade
 
 STONES = ['#b9b2a4', '#a59e90', '#cbc5b7', '#aeb0a0']
@@ -40,11 +42,6 @@ def ring(R, az, z=0.0):
 
 # ------------------------------------------------------------------ building blocks
 
-def stone(put, loc, rotz, size, rng, mats=STONES):
-    b = sphere(1.0, 8, 5)
-    displace(b, 0.13, 1.4, rng.random() * 50)
-    put(b, C(rng.choice(mats), rough=0.95),
-        mtx=TRS(loc, (rng.uniform(-0.12, 0.12), rng.uniform(-0.12, 0.12), rotz), (size[0] / 2, size[1] / 2, size[2] / 2)))
 
 
 def stones_ring(put, R, z0, rows, rh, rng, sw=0.42, depth=0.34, gap=None, a0=0.0, a1=2 * PI, mats=STONES):
@@ -73,62 +70,12 @@ def stones_line(put, p0, p1, z0, rows, rh, rng, sw=0.42, depth=0.34, mats=STONES
                   (d.length / n * rng.uniform(0.95, 1.12), depth * rng.uniform(0.9, 1.1), rh * rng.uniform(1.0, 1.15)), rng, mats)
 
 
-def timber(put, a, b, th=0.16, col=TIMBER):
-    a, b = Vector(a), Vector(b)
-    d = b - a
-    put(box(th, th, d.length, th * 0.14), C(col, rough=0.9), mtx=Matrix.Translation((a + b) / 2) @ align_z(d))
 
 
-def tile(w, ln, th=0.07):
-    return box(w, ln, th, 0.022)
 
 
-def tiles_cone(put, R, z0, H, rows, rng, mats, flare=1.25, tw=0.44):
-    rr = lambda t: R * (1 - t) ** flare
-    prof = [(0, z0), (R * 0.97, z0)] + [(rr(k / 12) * 0.97, z0 + H * k / 12) for k in range(1, 12)] + [(0, z0 + H)]
-    put(lathe(prof, 24), C(shade(mats[1], 0.8)))
-    for k in range(rows):
-        t = k / rows * 0.96
-        t2 = t + 1 / rows
-        r = rr(t) + 0.03
-        z = z0 + H * t
-        a = math.atan2(H / rows, max(1e-3, rr(t) - rr(min(t2, 0.999))))
-        ls = math.hypot(H / rows, rr(t) - rr(min(t2, 0.999))) * 1.4
-        n = max(5, int(2 * PI * r / tw))
-        w = 2 * PI * r / n * 1.07
-        for i in range(n):
-            az = 2 * PI * (i + 0.5 * (k % 2)) / n
-            put(tile(w, ls, 0.075), C(rng.choice(mats), rough=0.8),
-                mtx=Rz(az) @ Matrix.Translation((0, -r, z)) @ TRS(rot=(a - 0.12, 0, 0)) @ Matrix.Translation((0, ls * 0.42, 0.04)))
 
 
-def tiles_gable(put, W, D, z, rise, ov, rng, mats, tw=0.42, slab=TIMBER):
-    """Gable roof with the ridge along local Y, eaves at x = +-(W/2 + ov)."""
-    half = W / 2
-    th = math.atan2(rise, half)
-    Lx = (half + ov) / math.cos(th)
-    rows = max(2, round(Lx / 0.4))
-    cols = max(2, round((D + 2 * ov) / tw))
-    w = (D + 2 * ov) / cols
-    tl = Lx / rows * 1.4
-    for sgn in (1, -1):
-        mid = Vector((sgn * (half + ov) / 2, 0, z + rise - (half + ov) / 2 * math.tan(th)))
-        M = TRS(mid, (0, sgn * th, 0))
-        put(box(Lx, D + 2 * ov - 0.06, 0.1, 0.02), C(slab, rough=0.9), mtx=M)
-        for r in range(rows):
-            for c in range(cols + (r % 2)):
-                v = -(D + 2 * ov) / 2 + w * (c + 0.5 - 0.5 * (r % 2))
-                ww = w
-                if r % 2 and c in (0, cols):
-                    v += w * 0.25 * (1 if c == 0 else -1)
-                    ww = w * 0.5
-                u = Lx / 2 - r * Lx / rows - tl * 0.42
-                put(box(tl, ww * 1.04, 0.075, 0.022), C(rng.choice(mats), rough=0.8),
-                    mtx=M @ TRS((sgn * u, v, 0.1), (0, -sgn * 0.11, 0)))
-    n = max(2, round((D + 2 * ov) / 0.36))
-    for i in range(n):
-        v = -(D + 2 * ov) / 2 + (D + 2 * ov) * (i + 0.5) / n
-        put(box(0.3, (D + 2 * ov) / n * 1.04, 0.14, 0.05), C(rng.choice(mats), rough=0.8), loc=(0, v, z + rise + 0.1))
 
 
 def window(put, w=0.5, h=0.7, arched=True, shutters=None, flowerbox=False, rng=None):
@@ -165,6 +112,8 @@ def door(put, w=0.9, h=1.5, col='#7fa0a8', arch_stones=None, rng=None):
         x = -w / 2 + w * (i + 0.5) / n
         hh = h + math.sqrt(max(0.0, (w / 2) ** 2 - x * x)) * 0.98
         put(box(w / n * 0.94, 0.2, hh - 0.04, 0.015), C(shade(col, 1.0 - 0.06 * (i % 2)), rough=0.85), loc=(x, -0.01, hh / 2))
+        if rng:
+            grain(put, x, hh / 2, w / n * 0.8, hh * 0.8, -0.112, rng, col, True, 2)
     for zz in (h * 0.3, h * 0.85):
         put(box(w * 0.92, 0.23, 0.07, 0.01), C('#4d535a', rough=0.5), loc=(0, -0.01, zz))
     put(sphere(0.055, 8, 6), C('#c9a24a', rough=0.35), loc=(w * 0.3, -0.14, h * 0.55))
@@ -278,6 +227,8 @@ def dressing(put, rng, R, n_grass=6, n_flowers=4, cols=('#f2a0a8', '#f7f1e3', '#
 def library_tower():
     rng = random.Random(11)
     a = Asset('library_tower', 'Round stone-and-timber library tower, 3.7 m across at the roof line, 6.2 m tall. Door faces front.')
+    stones_part(a)
+    snow_part(a)
     P = a.part('Tower')
     put = P.put()
     wood = C(TIMBER, rough=0.9)
@@ -334,6 +285,8 @@ def library_tower():
 def workshop_hut():
     rng = random.Random(23)
     a = Asset('workshop_hut', 'Open-fronted timber workshop, 4.4 x 3.6 m, 3.8 m tall, with bench, tools, anvil and lantern.')
+    stones_part(a)
+    snow_part(a)
     P = a.part('Hut')
     put = P.put()
     W, D, Hp, rise = 4.4, 3.6, 2.2, 1.35
@@ -419,19 +372,17 @@ def workshop_hut():
 def burrow():
     rng = random.Random(31)
     a = Asset('burrow', "Memo's den: a turf mound 5.2 m across and 2.2 m tall with a stone front, round door and chimney.")
+    stones_part(a)
+    snow_part(a)
     P = a.part('Burrow')
     put = P.put()
     R, H = 2.55, 2.0
-    m = dome(R, H, 36, 10)
-    displace(m, 0.12, 0.9, 2.0)
-    put(m, C('#7db356', rough=0.95))
-    for i in range(16):   # softer, lighter turf pillows on top
-        az, el = rng.uniform(0, 2 * PI), rng.uniform(0.35, 1.3)
-        p = Vector((R * math.cos(el) * math.cos(az), R * math.cos(el) * math.sin(az), H * math.sin(el)))
-        if p.y < -1.2 and p.z < 1.7:
-            continue
-        r = rng.uniform(0.35, 0.6)
-        put(blob(r, 2, 0.15, 1.6, i), C(rng.choice(GRASS)), loc=p * 0.97, scale=(1, 1, 0.45))
+    m = dome(R, H, 40, 12)
+    displace(m, 0.26, 0.55, 2.0)
+    displace(m, 0.07, 2.4, 5.0)
+    put(m, C('#6fa84c', rough=0.95))
+    Tf = a.raw('Turf')
+    turf_cards(Tf, rng, R * 1.02, H * 1.03, 420, lambda p: p.y < -1.5 and abs(p.x) < 1.7 and p.z < 2.0)
     # stone front
     fy = -2.6
     put(cyl(1.28, 1.28, 1.6, 24), C('#8f887b'), loc=(0, fy + 1.55, 0.92), rot=(PI / 2, 0, 0))
@@ -449,6 +400,7 @@ def burrow():
         x = -0.62 + 1.24 * (i + 0.5) / 6
         hh = 2 * math.sqrt(max(0.01, 0.64 ** 2 - x * x))
         F(box(1.24 / 6 * 0.93, 0.1, hh, 0.015), C(shade('#6f9aa0', 1.0 - 0.06 * (i % 2))), loc=(x, -0.22, 0.82))
+        grain(F, x, 0.82, 0.16, hh * 0.8, -0.272, rng, '#6f9aa0', True, 2)
     F(torus(0.66, 0.045, 24, 6), C('#4d535a', rough=0.5), loc=(0, -0.24, 0.82), rot=(PI / 2, 0, 0))
     F(sphere(0.07, 8, 6), C('#c9a24a', rough=0.35), loc=(0, -0.3, 0.82))
     F(box(1.5, 0.6, 0.12, 0.04), C(STONES[0]), loc=(0, -0.42, 0.06))
@@ -497,6 +449,8 @@ def burrow():
 def notice_board():
     rng = random.Random(41)
     a = Asset('notice_board', 'Timber notice board with a tiled roof, 2.9 m wide and 2.5 m tall, with pinned notes.')
+    stones_part(a)
+    snow_part(a)
     P = a.part('Board')
     put = P.put()
     for s in (1, -1):
@@ -507,7 +461,8 @@ def notice_board():
             stone(put, (s * 1.05 + 0.2 * math.cos(an), 0.2 * math.sin(an), 0.1), an, (0.3, 0.26, 0.24), rng)
     timber(put, (-1.25, 0, 1.98), (1.25, 0, 1.98), 0.14)
     for i in range(5):
-        put(box(1.9, 0.07, 0.215, 0.012), C(WOODS[i % 3]), loc=(0, 0, 0.7 + 0.225 * i))
+        put(box(1.9, 0.07, 0.215, 0.012), C(WOODS[i % 3]), loc=(0, 0, 0.7 + 0.225 * i), tint=rng.uniform(0.9, 1.08))
+        grain(put, 0, 0.7 + 0.225 * i, 1.8, 0.16, -0.037, rng, WOODS[i % 3], False, 4)
     put(box(2.0, 0.1, 0.08, 0.02), C(TIMBER), loc=(0, 0, 0.56))
     put(box(2.0, 0.1, 0.08, 0.02), C(TIMBER), loc=(0, 0, 1.82))
     tiles_gable(P.put(Rz(PI / 2)), 0.9, 2.5, 2.05, 0.4, 0.2, rng, TILES_RED)
@@ -531,6 +486,7 @@ def notice_board():
 def pond():
     rng = random.Random(53)
     a = Asset('pond', 'Pond with a 4.6 m water radius, stone bank, lily pads, reeds and a small jetty. Water is its own node.')
+    stones_part(a)
     R = 4.6
     Wt = a.part('Water')
     w = disc(R * 0.99, 40, 0.08, 3.0)
@@ -607,7 +563,8 @@ def pond():
 
 def garden_plot():
     rng = random.Random(61)
-    a = Asset('garden_plot', 'Raised garden bed, 2.8 x 2.2 m, with a stone border and three crop rows.')
+    a = Asset('garden_plot', 'Raised garden bed, 2.8 x 2.2 m, stone border. Crops_spring / _summer / _autumn / _winter are swappable child nodes.')
+    stones_part(a)
     P = a.part('Plot')
     put = P.put()
     hx, hy = 1.3, 1.0
@@ -618,48 +575,86 @@ def garden_plot():
     soil = box(2 * hx, 2 * hy, 0.3, 0.05)
     displace(soil, 0.02, 4, 1)
     put(soil, C(SOIL, rough=1.0), loc=(0, 0, 0.1))
-    for k, y in enumerate((-0.6, 0.0, 0.6)):
+    for y in (-0.6, 0.0, 0.6):
         put(cyl(0.2, 0.2, 2 * hx - 0.3, 8), C(shade(SOIL, 0.9), rough=1.0), loc=(-hx + 0.15, y, 0.16), rot=(0, PI / 2, 0), scale=(0.6, 1, 1))
-        for i in range(5):
-            x = -hx + 0.35 + (2 * hx - 0.7) * i / 4
-            if k == 0:   # cabbages
-                put(blob(0.16, 2, 0.1, 2, i), C('#9cc77a'), loc=(x, y, 0.38))
-                for j in range(5):
-                    an = 2 * PI * j / 5 + i
-                    put(leaf(0.3, 0.26, -0.3, 0.3, 4, 2), C(rng.choice(['#86bf5e', '#6fae52']), double=True),
-                        mtx=TRS((x, y, 0.3), (0, 0, an)) @ TRS(rot=(0.75, 0, 0)), recalc=False)
-            elif k == 1:  # carrots
-                put(cyl(0.05, 0.06, 0.06, 6), C('#e08a3c'), loc=(x, y, 0.27))
-                for j in range(5):
-                    an = 2 * PI * j / 5 + i
-                    put(leaf(0.3, 0.09, 0.2, 0.2, 4, 2), C('#6fae52', double=True),
-                        mtx=TRS((x, y, 0.32), (0, 0, an)) @ TRS(rot=(1.15, 0, 0)), recalc=False)
-            else:        # pumpkins and sprouts
-                if i % 2 == 0:
-                    pm = sphere(1.0, 12, 6)
-                    for v in pm.verts:
-                        an = math.atan2(v.co.y, v.co.x)
-                        f = 1 + 0.08 * math.cos(6 * an)
-                        v.co.x *= f
-                        v.co.y *= f
-                    put(pm, C('#e59a4a', rough=0.6), loc=(x, y, 0.4), scale=(0.2, 0.2, 0.15))
-                    put(cyl(0.025, 0.015, 0.08, 5), C('#5c9c48'), loc=(x, y, 0.53))
-                else:
-                    for j in range(3):
-                        put(leaf(0.22, 0.14, 0.2, 0.3, 4, 2), C('#86bf5e', double=True),
-                            mtx=TRS((x, y, 0.28), (0, 0, 2.1 * j + i)) @ TRS(rot=(1.0, 0, 0)), recalc=False)
-    # sunflower in the back corner, name stake at the front
     sx, sy = hx - 0.2, hy - 0.2
-    put(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx, sy - 0.04, 1.5)], 0.025, 6), C('#5c9c48'))
-    Sf = P.put(TRS((sx, sy - 0.06, 1.52), (0.35, 0, 0)))
-    Sf(cyl(0.12, 0.12, 0.05, 12), C('#6b4630'), rot=(PI / 2, 0, 0))
-    for j in range(12):
-        an = 2 * PI * j / 12
-        Sf(leaf(0.17, 0.08, 0.0, 0.2, 4, 2), C('#f2c94c', double=True),
-           mtx=TRS((0.1 * math.cos(an), -0.03, 0.1 * math.sin(an)), (PI / 2, 0, 0)) @ TRS(rot=(0, 0, an - PI / 2)), recalc=False)
-    for j in range(2):
-        put(leaf(0.3, 0.2, -0.2, 0.2, 4, 2), C('#6fae52', double=True),
-            mtx=TRS((sx, sy, 0.7 + 0.3 * j), (0, 0, 2 + 3 * j)) @ TRS(rot=(0.8, 0, 0)), recalc=False)
+
+    def pumpkin(cp, x, y, s, colr='#e59a4a'):
+        pm = sphere(1.0, 12, 6)
+        for v in pm.verts:
+            f = 1 + 0.08 * math.cos(6 * math.atan2(v.co.y, v.co.x))
+            v.co.x *= f
+            v.co.y *= f
+        cp(pm, C(colr, rough=0.6), loc=(x, y, 0.27 + 0.13 * s), scale=(0.2 * s, 0.2 * s, 0.15 * s))
+        cp(cyl(0.025 * s, 0.015 * s, 0.08 * s, 5), C('#5c9c48'), loc=(x, y, 0.27 + 0.26 * s))
+
+    def leaves(cp, x, y, n, ln, w, pitch, cols, z=0.3, spin=0.0):
+        for j in range(n):
+            cp(leaf(ln, w, 0.2, 0.3, 4, 2), C(rng.choice(cols), double=True),
+               mtx=TRS((x, y, z), (0, 0, 2 * PI * j / n + spin)) @ TRS(rot=(pitch, 0, 0)), recalc=False)
+
+    # one child node per season; summer is the visible default, the others are exported hidden
+    for season in ('spring', 'summer', 'autumn', 'winter'):
+        Cp = a.part('Crops_' + season)
+        Cp.hidden = season != 'summer'
+        cp = Cp.put()
+        for k, y in enumerate((-0.6, 0.0, 0.6)):
+            for i in range(5):
+                x = -hx + 0.35 + (2 * hx - 0.7) * i / 4
+                if season == 'spring':          # rows of seedlings
+                    leaves(cp, x, y, 2 + (k == 0), 0.11, 0.07, 0.9, ['#a6d86a', '#8fcf5a'], 0.27, i)
+                    if i < 4:
+                        leaves(cp, x + 0.3, y, 2, 0.08, 0.05, 0.8, ['#b4e078'], 0.27, i + 1)
+                elif season == 'summer':
+                    if k == 0:                  # cabbages
+                        cp(blob(0.16, 2, 0.1, 2, i), C('#9cc77a'), loc=(x, y, 0.38))
+                        leaves(cp, x, y, 5, 0.3, 0.26, 0.75, ['#86bf5e', '#6fae52'], 0.3, i)
+                    elif k == 1:                # carrots
+                        cp(cyl(0.05, 0.06, 0.06, 6), C('#e08a3c'), loc=(x, y, 0.27))
+                        leaves(cp, x, y, 5, 0.3, 0.09, 1.15, ['#6fae52'], 0.32, i)
+                    elif i % 2 == 0:
+                        pumpkin(cp, x, y, 1.0)
+                    else:
+                        leaves(cp, x, y, 3, 0.22, 0.14, 1.0, ['#86bf5e'], 0.28, i)
+                elif season == 'autumn':        # harvest: big pumpkins, the last cabbages, gaps where crops were lifted
+                    if k == 2:
+                        pumpkin(cp, x, y, 1.35 if i % 2 == 0 else 0.9, '#e07f2e' if i % 2 == 0 else '#edb44e')
+                        leaves(cp, x, y, 3, 0.26, 0.18, 0.5, ['#b7a24a', '#8c9a45'], 0.27, i)
+                    elif k == 0 and i % 2 == 0:
+                        cp(blob(0.19, 2, 0.1, 2, i), C('#a9c77a'), loc=(x, y, 0.4))
+                        leaves(cp, x, y, 5, 0.34, 0.3, 0.6, ['#8fb85a', '#a8b45a'], 0.3, i)
+                    elif k == 1 and i % 3 == 0:
+                        leaves(cp, x, y, 4, 0.26, 0.09, 1.0, ['#b0a44a', '#8fa84a'], 0.3, i)
+                    else:
+                        cp(sphere(1.0, 8, 5), C(shade(SOIL, 0.75), rough=1.0), loc=(x, y, 0.27), scale=(0.1, 0.1, 0.03))   # lifted
+                else:                           # winter: straw mulch over bare soil
+                    for j in range(3):
+                        st = box(rng.uniform(0.3, 0.5), 0.035, 0.012)
+                        cp(st, C(rng.choice(['#d9c078', '#c9ad62', '#e6d08c'])), mtx=TRS((x + rng.uniform(-0.12, 0.12), y + rng.uniform(-0.12, 0.12), 0.275 + 0.008 * j),
+                                                                                         (rng.uniform(-0.1, 0.1), rng.uniform(-0.1, 0.1), rng.uniform(0, PI))))
+        if season == 'summer':
+            cp(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx, sy - 0.04, 1.5)], 0.025, 6), C('#5c9c48'))
+            Sf = Cp.put(TRS((sx, sy - 0.06, 1.52), (0.35, 0, 0)))
+            Sf(cyl(0.12, 0.12, 0.05, 12), C('#6b4630'), rot=(PI / 2, 0, 0))
+            for j in range(12):
+                an = 2 * PI * j / 12
+                Sf(leaf(0.17, 0.08, 0.0, 0.2, 4, 2), C('#f2c94c', double=True),
+                   mtx=TRS((0.1 * math.cos(an), -0.03, 0.1 * math.sin(an)), (PI / 2, 0, 0)) @ TRS(rot=(0, 0, an - PI / 2)), recalc=False)
+            leaves(cp, sx, sy, 2, 0.3, 0.2, 0.8, ['#6fae52'], 0.85, 2)
+        elif season == 'autumn':                # the sunflower has gone to seed and droops
+            cp(tube([(sx, sy, 0.2), (sx + 0.03, sy, 0.9), (sx + 0.02, sy - 0.1, 1.4)], 0.025, 6), C('#8a7a3e'))
+            Sf = Cp.put(TRS((sx + 0.02, sy - 0.16, 1.36), (1.1, 0, 0)))
+            Sf(cyl(0.13, 0.13, 0.06, 12), C('#4a3526'), rot=(PI / 2, 0, 0))
+            leaves(cp, sx, sy, 2, 0.28, 0.18, 0.4, ['#9a8a4a'], 0.8, 2)
+        elif season == 'spring':
+            cp(tube([(sx, sy, 0.2), (sx + 0.01, sy, 0.5)], 0.018, 6), C('#6fae52'))
+            leaves(cp, sx, sy, 3, 0.16, 0.1, 0.9, ['#8fcf5a'], 0.48, 1)
+        else:
+            Sn = Cp.put()
+            for (x, y, s) in ((-0.5, -0.3, 1.0), (0.4, 0.35, 0.8), (0.1, -0.6, 0.6)):   # patches of snow on the mulch
+                sn = boulder(rng, 0.7 * s, 0.5 * s, 0.07, 10, 0.2, 1)
+                Sn(sn, C('#f4f8fb', rough=0.9), loc=(x, y, 0.27))
+
     timber(put, (-hx + 0.1, -hy - 0.2, 0), (-hx + 0.1, -hy - 0.2, 0.5), 0.05, WOODS[1])
     put(box(0.32, 0.03, 0.2, 0.01), C(WOODS[2]), loc=(-hx + 0.1, -hy - 0.23, 0.5))
     # watering can
@@ -675,6 +670,7 @@ def garden_plot():
 def computer():
     rng = random.Random(71)
     a = Asset('computer', "Memo's computer desk, 1.5 x 0.8 m. The Screen node glows and can be swapped or animated.")
+    stones_part(a)
     P = a.part('Desk')
     put = P.put()
     put(box(1.5, 0.8, 0.07, 0.02), C(WOODS[0]), loc=(0, 0, 0.72))
@@ -719,6 +715,7 @@ def computer():
 def lantern():
     rng = random.Random(81)
     a = Asset('lantern', 'Lantern post, 2.3 m tall. The Light empty marks where a point light goes.')
+    stones_part(a)
     put = a.part('Lantern').put()
     timber(put, (0, 0, 0), (0, 0, 2.2), 0.14)
     for i in range(5):
@@ -736,6 +733,7 @@ def lantern():
 def bench():
     rng = random.Random(82)
     a = Asset('bench', 'Timber bench on stone feet, 1.5 m wide.')
+    stones_part(a)
     put = a.part('Bench').put()
     for s in (1, -1):
         stone(put, (s * 0.6, 0, 0.14), 0, (0.26, 0.5, 0.3), rng)
@@ -752,6 +750,7 @@ def bench():
 def stump():
     rng = random.Random(83)
     a = Asset('stump', 'Tree stump seat with roots and a mushroom.')
+    stones_part(a)
     put = a.part('Stump').put()
     t = lathe([(0, 0), (0.46, 0), (0.36, 0.12), (0.32, 0.42), (0.33, 0.5), (0, 0.5)], 16)
     displace(t, 0.025, 5, 2)
@@ -764,7 +763,7 @@ def stump():
         put(tube([(0.25 * math.cos(an), 0.25 * math.sin(an), 0.22), (0.45 * math.cos(an), 0.45 * math.sin(an), 0.08),
                   (0.62 * math.cos(an), 0.62 * math.sin(an), -0.02)], [0.1, 0.08, 0.04], 6), C(WOODS[1], rough=0.95))
     mushroom(put, (0.38, -0.22, 0.0), 1.2, rng=rng)
-    put(blob(0.12, 1, 0.2, 2, 3), C(GRASS[0]), loc=(-0.2, 0.12, 0.5), scale=(1, 1, 0.4))
+    moss(put, (-0.12, 0.1, 0.5), 0.3, 0.24, rng)
     grass(put, (-0.4, -0.3, 0), 6, 0.26, rng)
     return a
 
@@ -772,6 +771,7 @@ def stump():
 def signpost():
     rng = random.Random(84)
     a = Asset('signpost', 'Signpost with two arrow boards on a stone base, 1.9 m tall.')
+    stones_part(a)
     put = a.part('Signpost').put()
     timber(put, (0, 0, 0), (0.02, 0, 1.85), 0.13)
     for i in range(6):
@@ -785,101 +785,21 @@ def signpost():
     return a
 
 
-def _tree(a, rng, h=4.6, trunk=0.26):
-    put = a.part('Trunk').put()
-    pts = [Vector((0, 0, 0)), Vector((0.05, 0.02, h * 0.2)), Vector((-0.04, 0.04, h * 0.42)), Vector((0.06, -0.02, h * 0.62))]
-    put(tube(pts, [trunk * 1.5, trunk, trunk * 0.85, trunk * 0.6], 10), C(WOODS[1], rough=0.95))
-    for k in range(4):
-        an = 2 * PI * k / 4 + 0.6
-        put(tube([(0.18 * math.cos(an), 0.18 * math.sin(an), 0.3), (0.42 * math.cos(an), 0.42 * math.sin(an), 0.05),
-                  (0.6 * math.cos(an), 0.6 * math.sin(an), -0.03)], [0.13, 0.09, 0.04], 6), C(WOODS[1], rough=0.95))
-    for an, zz in ((0.5, 0.45), (3.4, 0.52)):
-        put(tube([pts[2], pts[2] + Vector((0.5 * math.cos(an), 0.5 * math.sin(an), h * 0.1)),
-                  pts[2] + Vector((0.9 * math.cos(an), 0.9 * math.sin(an), h * 0.22))], [trunk * 0.5, trunk * 0.4, trunk * 0.25], 6), C(WOODS[1], rough=0.95))
-    Cn = a.part('Canopy', (0, 0, h * 0.62))
-    cp = Cn.put()
-    cz = h * 0.7
-    blobs = [(0, 0, cz + h * 0.08, 1.35)]
-    for k in range(6):
-        an = 2 * PI * k / 6 + rng.uniform(-0.2, 0.2)
-        blobs.append((1.1 * math.cos(an), 1.1 * math.sin(an), cz - h * 0.04 + rng.uniform(-0.15, 0.2), rng.uniform(0.85, 1.1)))
-    for k in range(3):
-        an = 2 * PI * k / 3 + 0.5
-        blobs.append((0.55 * math.cos(an), 0.55 * math.sin(an), cz + h * 0.2, rng.uniform(0.75, 0.95)))
-    for i, (x, y, z, r) in enumerate(blobs):
-        colr = LEAVES[2] if z > cz + h * 0.12 else (LEAVES[1] if i % 2 else LEAVES[0])
-        cp(blob(r, 2, 0.16, 2.2, i * 3.1), C(colr, rough=0.9), loc=(x, y, z), scale=(1, 1, 0.82))
-    for i in range(10):
-        an, el = rng.uniform(0, 2 * PI), rng.uniform(-0.1, 1.2)
-        rr = 1.8
-        cp(sphere(0.07, 6, 4), C(rng.choice(['#f6c1cf', '#fbe3ea'])),
-           loc=(rr * math.cos(el) * math.cos(an), rr * math.cos(el) * math.sin(an), cz + 1.5 * math.sin(el)))
-    return put
 
 
-def tree():
-    rng = random.Random(85)
-    a = Asset('tree', 'Round leafy tree, about 5.3 m tall. Canopy is its own node for swaying.')
-    put = _tree(a, rng)
-    dressing(put, rng, 0.75, 5, 3)
-    return a
 
 
-def pine():
-    rng = random.Random(86)
-    a = Asset('pine', 'Chunky layered pine, about 6 m tall. Canopy is its own node for swaying.')
-    put = a.part('Trunk').put()
-    put(tube([(0, 0, 0), (0.02, 0, 1.2), (0, 0, 2.4)], [0.3, 0.2, 0.14], 10), C(WOODS[1], rough=0.95))
-    Cn = a.part('Canopy', (0, 0, 1.0))
-    z = 1.0
-    cols = ['#3f8f72', '#4a9b7c', '#57a886', '#66b592', '#74bf9c']
-    for k in range(5):
-        r = 1.9 - 0.33 * k
-        hh = 1.5 - 0.1 * k
-        t = lathe([(0, z + 0.12), (r * 0.6, z + 0.1), (r, z), (r * 0.72, z + hh * 0.3), (r * 0.3, z + hh * 0.8), (0, z + hh)], 16)
-        for v in t.verts:
-            an = math.atan2(v.co.y, v.co.x)
-            f = 1 + 0.09 * math.cos(7 * an + k) * min(1.0, math.hypot(v.co.x, v.co.y) / r)
-            v.co.x *= f
-            v.co.y *= f
-            v.co.z -= 0.12 * (math.hypot(v.co.x, v.co.y) / r) ** 2
-        displace(t, 0.04, 2.5, k)
-        Cn.add(t, C(cols[k], rough=0.9))
-        z += hh * 0.62
-    grass(put, (0.3, -0.3, 0), 7, 0.3, rng)
-    mushroom(put, (-0.35, -0.3, 0), 1.3, rng=rng)
-    return a
 
 
-def rock():
-    rng = random.Random(87)
-    a = Asset('rock', 'Mossy boulder with two smaller stones, about 1.3 m across.')
-    put = a.part('Rock').put()
-    put(blob(0.55, 2, 0.22, 1.5, 4, (1.1, 0.9, 0.75)), C(STONES[1], rough=0.95), loc=(0, 0, 0.28))
-    put(blob(0.3, 2, 0.22, 1.6, 9, (1.0, 1.0, 0.7)), C(STONES[0], rough=0.95), loc=(0.55, -0.25, 0.13))
-    put(blob(0.2, 1, 0.22, 1.6, 12, (1.0, 1.0, 0.7)), C(STONES[2], rough=0.95), loc=(-0.5, -0.35, 0.09))
-    put(blob(0.36, 2, 0.15, 2.0, 5, (1.1, 0.9, 0.3)), C(GRASS[0]), loc=(-0.05, 0.03, 0.62))
-    grass(put, (0.25, -0.5, 0), 7, 0.28, rng)
-    flower(put, (-0.25, -0.55, 0), '#f2c94c', 0.26, rng)
-    return a
 
 
-def bush():
-    rng = random.Random(88)
-    a = Asset('bush', 'Flowering bush, about 1.4 m across.')
-    put = a.part('Bush').put()
-    for i, (x, y, z, r) in enumerate(((0, 0, 0.45, 0.55), (0.45, 0.1, 0.35, 0.42), (-0.42, 0.05, 0.36, 0.44), (0.1, -0.35, 0.3, 0.36), (-0.1, 0.35, 0.34, 0.38))):
-        put(blob(r, 2, 0.16, 2.2, i * 2.3), C(LEAVES[i % 3], rough=0.9), loc=(x, y, z), scale=(1, 1, 0.85))
-    for i in range(12):
-        an, el = rng.uniform(0, 2 * PI), rng.uniform(0.2, 1.3)
-        put(sphere(0.05, 6, 4), C(rng.choice(['#f2a0a8', '#f7f1e3'])),
-            loc=(0.72 * math.cos(el) * math.cos(an), 0.6 * math.cos(el) * math.sin(an), 0.35 + 0.55 * math.sin(el)))
-    return a
 
 
 def well():
     rng = random.Random(89)
     a = Asset('well', 'Stone well with a tiled roof and bucket, 2.6 m tall.')
+    stones_part(a)
+    snow_part(a)
     put = a.part('Well').put()
     put(lathe([(0.5, 0), (0.78, 0), (0.78, 0.78), (0.5, 0.78)], 18), C('#8f887b'))
     stones_ring(put, 0.74, 0.0, 3, 0.27, rng, sw=0.36, depth=0.3)
@@ -890,7 +810,7 @@ def well():
     put(cyl(0.05, 0.05, 1.5, 8), C(WOODS[1]), loc=(-0.75, 0, 1.45), rot=(0, PI / 2, 0))
     put(cyl(0.012, 0.012, 0.55, 5), C('#cbb98f'), loc=(0.1, 0, 0.9))
     put(lathe([(0, 0), (0.12, 0), (0.15, 0.22), (0.13, 0.22), (0.11, 0.02), (0, 0.02)], 10), C(WOODS[2]), loc=(0.1, 0, 0.7))
-    tiles_gable(a.parts[0].put(Rz(PI / 2)), 1.0, 1.5, 2.0, 0.55, 0.25, rng, TILES_RED)
+    tiles_gable(next(p for p in a.parts if p.name == 'Well').put(Rz(PI / 2)), 1.0, 1.5, 2.0, 0.55, 0.25, rng, TILES_RED)
     dressing(put, rng, 0.95, 6, 4)
     return a
 
@@ -898,6 +818,7 @@ def well():
 def stone_wall():
     rng = random.Random(90)
     a = Asset('stone_wall', 'Curving low stone wall: an 80 degree arc of radius 3 m centred on the origin, 0.75 m tall. Repeat to ring a yard.')
+    stones_part(a)
     put = a.part('Wall').put()
     stones_ring(put, 3.0, 0.0, 2, 0.3, rng, sw=0.44, depth=0.4, a0=-0.7, a1=0.7)
     n = 8
@@ -906,7 +827,7 @@ def stone_wall():
         stone(put, (3.0 * math.sin(az), -3.0 * math.cos(az), 0.66), az, (0.56, 0.5, 0.18), rng, ['#cbc5b7', '#d6d0c2'])
     for i in range(4):
         az = rng.uniform(-0.6, 0.6)
-        put(blob(0.16, 1, 0.2, 2, i), C(GRASS[i % 3]), loc=(3.0 * math.sin(az), -3.0 * math.cos(az), 0.74), scale=(1.2, 1, 0.4))
+        moss(put, (3.0 * math.sin(az), -3.0 * math.cos(az), 0.72), 0.4, 0.3, rng)
     for i in range(6):
         az = rng.uniform(-0.65, 0.65)
         r = 3.0 + rng.choice((-0.32, 0.32))
@@ -917,6 +838,7 @@ def stone_wall():
 def path_stones():
     rng = random.Random(91)
     a = Asset('path_stones', 'Cobbled path piece, about 2.6 x 1.3 m, running front to back. Tile along a route.')
+    stones_part(a)
     put = a.part('Path').put()
     placed = []
     tries = 0
@@ -936,6 +858,7 @@ def path_stones():
 def fence():
     rng = random.Random(92)
     a = Asset('fence', 'Rustic timber fence segment, 2.4 m long, 0.9 m tall.')
+    stones_part(a)
     put = a.part('Fence').put()
     for x in (-1.2, 0, 1.2):
         timber(put, (x, 0, 0), (x + rng.uniform(-0.02, 0.02), 0, 0.9 + rng.uniform(-0.04, 0.04)), 0.11)
@@ -952,6 +875,7 @@ def fence():
 def grass_tuft():
     rng = random.Random(93)
     a = Asset('grass_tuft', 'Tufty grass clump, 0.45 m tall. Scatter many.')
+    stones_part(a)
     put = a.part('Grass').put()
     grass(put, (0, 0, 0), 12, 0.42, rng, 0.12)
     grass(put, (0.14, 0.08, 0), 6, 0.28, rng, 0.08)
@@ -974,6 +898,7 @@ def flower_cluster(name, cols):
 def mushrooms():
     rng = random.Random(94)
     a = Asset('mushrooms', 'Three red-capped mushrooms.')
+    stones_part(a)
     put = a.part('Mushrooms').put()
     mushroom(put, (0, 0, 0), 2.0, rng=rng)
     mushroom(put, (0.25, -0.12, 0), 1.3, rng=rng)
@@ -984,12 +909,14 @@ def mushrooms():
 
 def crate_asset():
     a = Asset('crate', 'Wooden crate, 0.6 m.')
+    stones_part(a)
     crate(a.part('Crate').put(), (0, 0, 0), 0.6)
     return a
 
 
 def barrel_asset():
     a = Asset('barrel', 'Barrel, 0.8 m tall.')
+    stones_part(a)
     barrel(a.part('Barrel').put(), (0, 0, 0))
     return a
 
@@ -997,6 +924,7 @@ def barrel_asset():
 def lookout():
     rng = random.Random(95)
     a = Asset('lookout', 'Lookout set for the hilltop: telescope on a tripod, pennant pole and a ring of stones. Pennant is its own node.')
+    stones_part(a)
     put = a.part('Lookout').put()
     stones_ring(put, 1.9, 0.0, 1, 0.3, rng, sw=0.5, depth=0.42, a0=0.5, a1=2 * PI - 0.5)
     top = Vector((0, -0.4, 1.15))
@@ -1004,7 +932,7 @@ def lookout():
         an = 2 * PI * k / 3 + 0.5
         timber(put, top, (0.45 * math.cos(an), -0.4 + 0.45 * math.sin(an), 0), 0.06, WOODS[1])
     brass = C('#c9a24a', rough=0.35)
-    T = a.parts[0].put(TRS(top + Vector((0, 0, 0.08)), (0.25, 0, 0.3)))
+    T = next(p for p in a.parts if p.name == 'Lookout').put(TRS(top + Vector((0, 0, 0.08)), (0.25, 0, 0.3)))
     T(cyl(0.07, 0.055, 0.6, 10), brass, loc=(0, 0.3, 0), rot=(PI / 2, 0, 0))
     T(cyl(0.085, 0.085, 0.08, 10), C('#8a6f2f', rough=0.4), loc=(0, -0.28, 0), rot=(PI / 2, 0, 0))
     T(cyl(0.045, 0.04, 0.25, 10), brass, loc=(0, 0.52, 0), rot=(PI / 2, 0, 0))
@@ -1015,6 +943,243 @@ def lookout():
     return a
 
 
+def tile_tint(rng):
+    k = rng.uniform(0.84, 1.08)
+    return (k * 0.8, k * 0.96, k * 0.74) if rng.random() < 0.05 else k   # the odd mossy tile
+
+
+def stone(put, loc, rotz, size, rng, mats=STONES):
+    """One hand-cut stone: an irregular chamfered block, never a ball."""
+    put(block(rng, size[0], size[1], size[2], 0.18, 0.2, 1), C(rng.choice(mats), rough=0.95),
+        mtx=TRS(loc, (rng.uniform(-0.08, 0.08), rng.uniform(-0.08, 0.08), rotz + rng.uniform(-0.07, 0.07))),
+        tint=rng.uniform(0.86, 1.08))
+
+
+def timber(put, a, b, th=0.16, col=TIMBER, pegs=True):
+    """Hand-hewn beam: chamfered, slightly wavy along its length, pegged near the ends."""
+    a, b = Vector(a), Vector(b)
+    d = b - a
+    ln = d.length
+    bm = box(th, th, ln, th * 0.14)
+    for z in (-ln / 6, ln / 6):
+        bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1))
+    s = a.x * 7.3 + a.y * 3.1 + a.z * 5.7 + b.x * 2.9 + b.z
+    for v in bm.verts:
+        v.co.x += th * 0.07 * math.sin(v.co.z * 2.1 + s)
+        v.co.y += th * 0.07 * math.cos(v.co.z * 1.7 + s * 1.7)
+    M = Matrix.Translation((a + b) / 2) @ align_z(d)
+    put(bm, C(col, rough=0.9), mtx=M, tint=0.88 + 0.18 * (abs(math.sin(s * 12.9898)) % 1))
+    if pegs and th >= 0.1 and ln > th * 5:
+        for e in (-1, 1):
+            put(cyl(th * 0.1, th * 0.1, th * 1.14, 6), C(shade(col, 0.55)),
+                mtx=M @ TRS((-th * 0.57, 0, e * (ln / 2 - th * 0.9)), (0, PI / 2, 0)))
+
+
+def grain(put, cx, cz, w, h, y, rng, col, vertical=True, n=3):
+    """A few fine dark grain lines on a plank face at depth y."""
+    for _ in range(n):
+        ln = (h if vertical else w) * rng.uniform(0.25, 0.6)
+        ox = rng.uniform(-0.38, 0.38) * w
+        oz = rng.uniform(-0.3, 0.3) * h
+        dims = (0.009, 0.006, ln) if vertical else (ln, 0.006, 0.009)
+        put(box(*dims), C(shade(col, 0.72)), loc=(cx + ox, y, cz + oz))
+
+
+def tiles_cone(put, R, z0, H, rows, rng, mats, flare=1.25, tw=0.44):
+    """Conical roof of separate overlapping beaver-tail tiles."""
+    rr = lambda t: R * (1 - t) ** flare
+    prof = [(0, z0), (R * 0.97, z0)] + [(rr(k / 12) * 0.97, z0 + H * k / 12) for k in range(1, 12)] + [(0, z0 + H)]
+    put(lathe(prof, 24), C(shade(mats[1], 0.7)))
+    for k in range(rows):
+        t = k / rows * 0.96
+        t2 = min(t + 1 / rows, 0.999)
+        r = rr(t) + 0.03
+        z = z0 + H * t
+        a = math.atan2(H / rows, max(1e-3, rr(t) - rr(t2)))
+        ls = math.hypot(H / rows, rr(t) - rr(t2)) * 1.45
+        n = max(5, int(2 * PI * r / tw))
+        w = 2 * PI * r / n * 1.06
+        for i in range(n):
+            az = 2 * PI * (i + 0.5 * (k % 2)) / n
+            put(tile_shape(w, ls, 0.075), C(rng.choice(mats), rough=0.8),
+                mtx=Rz(az) @ Matrix.Translation((0, -r, z)) @ TRS(rot=(a - 0.12 + rng.uniform(-0.05, 0.05), 0, 0))
+                @ Matrix.Translation((0, ls * 0.42, 0.04)) @ Rz(rng.uniform(-0.06, 0.06)), tint=tile_tint(rng))
+
+
+def tiles_gable(put, W, D, z, rise, ov, rng, mats, tw=0.4, slab=TIMBER):
+    """Gable roof (ridge along local Y) of separate beaver-tail tiles with half-round ridge caps."""
+    half = W / 2
+    th = math.atan2(rise, half)
+    Lx = (half + ov) / math.cos(th)
+    rows = max(2, round(Lx / 0.36))
+    cols = max(2, round((D + 2 * ov) / tw))
+    w = (D + 2 * ov) / cols
+    tl = Lx / rows * 1.45
+    for sgn in (1, -1):
+        mid = Vector((sgn * (half + ov) / 2, 0, z + rise - (half + ov) / 2 * math.tan(th)))
+        M = TRS(mid, (0, sgn * th, 0))
+        put(box(Lx, D + 2 * ov - 0.06, 0.1, 0.02), C(slab, rough=0.9), mtx=M)
+        for r in range(rows):
+            for c in range(cols + (r % 2)):
+                v = -(D + 2 * ov) / 2 + w * (c + 0.5 - 0.5 * (r % 2))
+                ww = w
+                if r % 2 and c in (0, cols):
+                    v += w * 0.25 * (1 if c == 0 else -1)
+                    ww = w * 0.5
+                u = Lx / 2 - r * Lx / rows - tl * 0.42
+                put(tile_shape(ww * 1.03, tl, 0.07), C(rng.choice(mats), rough=0.8),
+                    mtx=M @ TRS((sgn * u, v, 0.1), (0, -sgn * (0.11 + rng.uniform(-0.03, 0.03)), 0))
+                    @ Rz(sgn * PI / 2 + rng.uniform(-0.05, 0.05)), tint=tile_tint(rng))
+    n = max(2, round((D + 2 * ov) / 0.4))
+    seg = (D + 2 * ov) / n
+    for i in range(n):
+        v = -(D + 2 * ov) / 2 + seg * i
+        put(cyl(0.17, 0.15, seg * 1.1, 8), C(rng.choice(mats), rough=0.8),
+            mtx=TRS((0, v, z + rise + 0.05), (-PI / 2, 0, 0)), tint=tile_tint(rng))
+
+
+def moss(put, loc, w, d, rng):
+    put(boulder(rng, w, d, 0.1, 9, 0.2, 1), C(rng.choice(GRASS), rough=1.0), loc=loc, tint=rng.uniform(0.9, 1.1))
+
+
+def _rock(name, note, seed, pieces, mossy=True):
+    rng = random.Random(seed)
+    a = Asset(name, note)
+    stones_part(a)
+    put = a.part('Rock').put()
+    for i, (x, y, w, d, h) in enumerate(pieces):
+        rock_piece(put, boulder(rng, w, d, h, 18, 0.07, 2), TRS((x, y, -0.03), (0, 0, rng.uniform(0, 6))), rng)
+    x, y, w, d, h = pieces[0]
+    if mossy:
+        moss(put, (x - w * 0.08, y + d * 0.05, h * 0.86), w * 0.5, d * 0.5, rng)
+    grass(put, (x + w * 0.45, y - d * 0.5, 0), 7, 0.28, rng)
+    grass(put, (x - w * 0.5, y + d * 0.3, 0), 6, 0.24, rng)
+    flower(put, (x - w * 0.4, y - d * 0.55, 0), '#f2c94c', 0.26, rng)
+    return a
+
+
+def rock():
+    return _rock('rock', 'Faceted mossy boulder with two smaller stones, about 1.6 m across.', 87,
+                 [(0, 0, 1.3, 1.05, 0.9), (0.75, -0.3, 0.6, 0.5, 0.42), (-0.6, -0.45, 0.42, 0.36, 0.3)])
+
+
+def rock_tall():
+    return _rock('rock_tall', 'Standing stone with companions, about 1.7 m tall.', 187,
+                 [(0, 0, 0.85, 0.7, 1.7), (0.55, 0.2, 0.6, 0.5, 0.7), (-0.5, -0.3, 0.5, 0.42, 0.34)], mossy=False)
+
+
+def rock_flat():
+    return _rock('rock_flat', 'Low slab outcrop, about 2 m across.', 287,
+                 [(0, 0, 1.7, 1.2, 0.5), (0.9, 0.5, 0.9, 0.7, 0.34), (-0.8, -0.5, 0.7, 0.55, 0.3), (0.3, -0.75, 0.5, 0.4, 0.22)])
+
+
+def turf_cards(rp, rng, R, H, n, skip=None, scale=1.0):
+    """Tufty grass cards standing on a mound of radius R and height H."""
+    dark, light = Vector(lin('#4f8f3a')), Vector(lin('#b4dc6c'))
+    done = 0
+    while done < n:
+        az, el = rng.uniform(0, 2 * PI), math.asin(rng.uniform(0.05, 0.98))
+        p = Vector((R * math.cos(el) * math.cos(az), R * math.cos(el) * math.sin(az), H * math.sin(el)))
+        if skip and skip(p):
+            continue
+        done += 1
+        nrm = Vector((p.x / (R * R), p.y / (R * R), p.z / (H * H))).normalized()
+        up = (nrm * 0.55 + Vector((0, 0, 0.6))).normalized() * rng.uniform(0.2, 0.34) * scale
+        t = up.cross(Vector((rng.gauss(0, 1), rng.gauss(0, 1), 0.01))).normalized() * rng.uniform(0.22, 0.34) * scale
+        k = rng.uniform(0.85, 1.12)
+        rp.card(p * 1.0 + up * 0.9, t, up, 3, [dark * k, dark * k, light * k, light * k], [nrm + Vector((0, 0, 0.4))] * 4,
+                flip=rng.random() < 0.5)
+
+_STONES = None
+
+
+def stones_part(a):
+    """Give this asset a textured 'Stones' node; stone() and rock_piece() then build real rounded stones into it."""
+    global _STONES
+    from memo_lib import stone_mat
+    _STONES = a.raw('Stones')
+    _STONES.material = stone_mat()
+    _STONES.occlude = True
+    return _STONES
+
+
+_stone_blocky = stone
+
+
+def stone(put, loc, rotz, size, rng, mats=STONES):
+    """One hand-laid stone: rounded, chipped, tinted and textured (same rule as the wall generator)."""
+    if _STONES is None:
+        return _stone_blocky(put, loc, rotz, size, rng, mats)
+    import memo_walls as MWL
+    flat = min(size) < 0.16
+    bm = MWL.rounded_stone(rng, size[0], size[1], size[2], 2 if flat else 3, rad=rng.uniform(0.18, 0.28), lump=0.05)
+    tint = Vector(lin(rng.choice(MWL.TINTS))) * rng.uniform(0.84, 1.05)
+    if mats is not STONES:
+        tint = tint * 1.06
+    M = put.base @ TRS(loc, (rng.uniform(-0.07, 0.07), rng.uniform(-0.07, 0.07), rotz + rng.uniform(-0.07, 0.07)))
+    _STONES.mesh(bm, M, lambda wp, n: tint, uv_scale=1.1, uv_off=(rng.random(), rng.random()))
+
+
+def rock_piece(put, bm, mtx, rng, tint=None):
+    """A sculpted boulder with the stone texture and a little moss on its upward faces."""
+    if _STONES is None:
+        return put(bm, C(rng.choice(STONES), rough=0.95), mtx=mtx, tint=rng.uniform(0.88, 1.06))
+    import memo_walls as MWL
+    t = (Vector(lin(tint)) if tint else Vector(lin(rng.choice(MWL.TINTS)))) * rng.uniform(0.8, 1.0)
+    mo = Vector((rng.uniform(0, 30), rng.uniform(0, 30), 0))
+    mossy = rng.random() < 0.6
+
+    def col(wp, n):
+        c = t
+        if mossy and n.z > 0.45:
+            from mathutils import noise as _n
+            c = c.lerp(MWL.MOSS, max(0.0, min(0.8, (n.z - 0.45) * 1.6 * (0.5 + 0.7 * _n.noise(wp * 3 + mo)))))
+        return c
+    _STONES.mesh(bm, put.base @ mtx, col, uv_scale=0.9, uv_off=(rng.random(), rng.random()))
+
+_SNOW = None
+SNOW_COL = '#f4f8fb'
+
+
+def snow_part(a):
+    """Optional 'Snow' node (exported hidden): soft caps laid over this asset's roofs."""
+    global _SNOW
+    _SNOW = a.part('Snow')
+    _SNOW.hidden = True
+    return _SNOW
+
+
+_tiles_cone0, _tiles_gable0 = tiles_cone, tiles_gable
+
+
+def tiles_cone(put, R, z0, H, rows, rng, mats, flare=1.25, tw=0.44):
+    _tiles_cone0(put, R, z0, H, rows, rng, mats, flare, tw)
+    if _SNOW is not None:
+        rr = lambda t: R * (1 - t) ** flare
+        prof = [(rr(0.1) + 0.02, z0 + H * 0.1)] + [(rr(t) + 0.13, z0 + H * t + 0.12) for t in [0.1 + 0.9 * k / 9 for k in range(9)]] + [(0, z0 + H + 0.16)]
+        cap = lathe(prof, 22)
+        for v in cap.verts:
+            if v.co.z < z0 + H * 0.2:
+                v.co.z -= 0.1 * abs(math.sin(3.5 * math.atan2(v.co.y, v.co.x)))
+        displace(cap, 0.03, 2.0, 3)
+        _SNOW.put(put.base)(cap, C(SNOW_COL, rough=0.9))
+
+
+def tiles_gable(put, W, D, z, rise, ov, rng, mats, tw=0.4, slab=TIMBER):
+    _tiles_gable0(put, W, D, z, rise, ov, rng, mats, tw, slab)
+    if _SNOW is not None:
+        sp = _SNOW.put(put.base)
+        half = W / 2
+        th = math.atan2(rise, half)
+        Lx = (half + ov) / math.cos(th)
+        for sgn in (1, -1):
+            mid = Vector((sgn * (half + ov) / 2, 0, z + rise - (half + ov) / 2 * math.tan(th)))
+            sl = box(Lx * 0.93, D + 2 * ov - 0.08, 0.15, 0.06, 2)
+            displace(sl, 0.02, 2.5, sgn)
+            sp(sl, C(SNOW_COL, rough=0.9), mtx=TRS(mid, (0, sgn * th, 0)) @ Matrix.Translation((-sgn * Lx * 0.03, 0, 0.22)))
+        sp(cyl(0.2, 0.2, D + 2 * ov - 0.06, 10), C(SNOW_COL, rough=0.9), mtx=TRS((0, -(D + 2 * ov - 0.06) / 2, z + rise + 0.1), (-PI / 2, 0, 0)))
+
+
 def build_all():
     yield library_tower()
     yield workshop_hut()
@@ -1023,7 +1188,7 @@ def build_all():
     yield pond()
     yield garden_plot()
     yield computer()
-    for f in (lantern, bench, stump, signpost, tree, pine, rock, bush, well, stone_wall, path_stones, fence,
+    for f in (lantern, bench, stump, signpost, rock, rock_tall, rock_flat, well, path_stones, fence,
               grass_tuft, mushrooms, crate_asset, barrel_asset, lookout):
         yield f()
     yield flower_cluster('flower_cluster', ('#f2a0a8', '#f7f1e3', '#f6c1cf'))

@@ -59,7 +59,7 @@ for m in bpy.data.materials:
             pass
         b = next(n for n in nm.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
         if base in ('fur', 'shade'):   # Rob asked for darker fur than the sheet colours
-            col = tuple(c * 0.62 for c in col)
+            col = tuple(c * 0.4 for c in col)
         b.inputs['Base Color'].default_value = (*col, 1.0)
         b.inputs['Roughness'].default_value = 0.25 if base == 'ink' else 0.9
         lit[base] = nm

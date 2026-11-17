@@ -6,9 +6,11 @@ import { heightAt } from './terrain.js';
 import { lamps, glows } from './builders.js';
 
 // These exist once, as real objects from the database; the layout only says how they sit.
-export const LANDMARKS = new Set(['notice_board', 'burrow', 'workshop_hut', 'library_tower', 'computer', 'pond']);
-const SWAY = { tree: 0.05, pine: 0.035, bush: 0.02, grass_tuft: 0.09, flower_cluster: 0.07, flower_cluster_gold: 0.07, flower_cluster_blue: 0.07 };
+export const LANDMARKS = new Set(['notice_board', 'burrow', 'workshop_hut', 'library_tower', 'computer', 'pond', 'observatory', 'waterfall', 'bridge', 'campfire', 'beach_hut']);
+const family = (name) => name.replace(/_(tall|wide|blossom|birch|low|berry|gold|blue)$/, '');
+const SWAY = { tree: 0.05, pine: 0.035, bush: 0.02, grass_tuft: 0.09, flower_cluster: 0.07 };
 const NO_SHADOW = new Set(['grass_tuft', 'path_stones']);
+const isFoliage = (n) => { for (let a = n; a; a = a.parent) if (/^(Canopy|Leaves)/.test(a.name)) return true; return false; };
 
 export async function loadLayout() {
   try { const r = await fetch('/assets/models/layout.json'); if (!r.ok) return null; return (await r.json()).items || null; } catch { return null; }
@@ -20,7 +22,7 @@ function swaying(mat, amount, pivotY) {
   const key = `${mat.uuid}:${amount}:${pivotY}`;
   if (swayCache.has(key)) return swayCache.get(key);
   const m = new THREE.MeshStandardNodeMaterial();
-  for (const k of ['color', 'roughness', 'metalness', 'vertexColors', 'map', 'flatShading', 'emissive', 'emissiveIntensity', 'side']) if (mat[k] !== undefined) { if (m[k]?.copy && mat[k]?.isColor) m[k].copy(mat[k]); else m[k] = mat[k]; }
+  for (const k of ['color', 'roughness', 'metalness', 'vertexColors', 'map', 'normalMap', 'alphaTest', 'transparent', 'flatShading', 'emissive', 'emissiveIntensity', 'side', 'name']) if (mat[k] !== undefined) { if (m[k]?.copy && mat[k]?.isColor) m[k].copy(mat[k]); else m[k] = mat[k]; }
   const lift = positionLocal.y.sub(pivotY).max(0);
   const phase = positionWorld.x.mul(0.35).add(positionWorld.z.mul(0.27));
   const gust = sin(time.mul(1.3).add(phase)).add(sin(time.mul(2.9).add(phase.mul(2.3))).mul(0.35));
@@ -51,6 +53,7 @@ export function applySeasonNodes(root, S) {
     const m = SEASON_NODE.exec(n.name);
     if (m) { if (!groups.has(m[1])) groups.set(m[1], {}); groups.get(m[1])[m[2]] = n; }
     else if (/^Snow/.test(n.name)) n.scale.setScalar(S?.snow ? 1 : 0.001);
+    if (n.isMesh && isFoliage(n)) n.receiveShadow = false;
   });
   for (const set of groups.values()) {
     if (Object.keys(set).length < 2) continue;
@@ -64,7 +67,8 @@ export function applySeasonNodes(root, S) {
 
 // What the time of year does to each scattered thing: a tint (multiplied into its own colour) or nothing at all.
 const hash = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
-function seasonal(name, canopy, it, S, tint) {
+function seasonal(kind, canopy, it, S, tint) {
+  const name = family(kind);
   tint.setRGB(1, 1, 1);
   if (!S) return true;
   const r = hash(it.x, it.z);
@@ -75,7 +79,7 @@ function seasonal(name, canopy, it, S, tint) {
   }
   if (name === 'bush' && S.autumn > 0.05) tint.lerp(AUTUMN[1], S.autumn * 0.6);
   if (name === 'grass_tuft') tint.lerp(STRAW, Math.max(S.autumn * 0.6, S.bare * 0.5));
-  if (name.startsWith('flower_cluster') && (S.snow || r > S.flowers * 1.2)) return false;
+  if (name === 'flower_cluster' && (S.snow || r > S.flowers * 1.2)) return false;
   if (name === 'mushrooms' && S.name !== 'autumn' && r > 0.3) return false;
   if (S.snow && (canopy || name === 'bush' || name === 'grass_tuft' || name === 'rock' || name === 'path_stones')) tint.lerp(SNOWY, name === 'pine' || name === 'tree' ? 0.55 : 0.8);
   else if (S.frost && (name === 'grass_tuft' || name === 'bush')) tint.lerp(SNOWY, 0.3 * S.frost);
@@ -95,9 +99,11 @@ export function buildDressing(items, models, S = null) {
     model.traverse((n) => {
       if (!n.isMesh) return;
       for (let a = n; a; a = a.parent) if (Math.abs(a.scale.x) < 0.01) return; // a part put away for another season
-      let canopy = false; for (let a = n; a; a = a.parent) if (a.name.startsWith('Canopy')) canopy = true;
-      const pivot = name === 'tree' || name === 'pine' ? (canopy ? -1.5 : 99) : 0; // canopy vertices are measured from the canopy's own pivot
-      const mat = SWAY[name] && pivot < 50 ? swaying(n.material, SWAY[name], pivot) : n.material;
+      let canopy = false; for (let a = n; a; a = a.parent) if (/^(Canopy|Leaves)/.test(a.name)) canopy = true;
+      const fam = family(name), leafy = fam === 'tree' || fam === 'pine' || fam === 'bush';
+      // geometry is measured from its own node, so the height where swaying starts is shifted by where that node sits
+      const pivot = (leafy ? (fam === 'bush' ? 0.2 : 1.0) : 0) - n.getWorldPosition(new THREE.Vector3()).y;
+      const mat = SWAY[fam] && (!leafy || canopy) ? swaying(n.material, SWAY[fam], pivot) : n.material;
       const inst = new THREE.InstancedMesh(n.geometry, mat, list.length), tint = new THREE.Color();
       let i = 0;
       list.forEach((it) => {
@@ -107,7 +113,7 @@ export function buildDressing(items, models, S = null) {
         inst.setMatrixAt(i, M.multiplyMatrices(T, n.matrixWorld)); inst.setColorAt(i, tint); i++;
       });
       inst.count = i;
-      inst.castShadow = !NO_SHADOW.has(name); inst.receiveShadow = true;
+      inst.castShadow = !NO_SHADOW.has(name); inst.receiveShadow = !canopy; // leaf cards shadowing themselves look noisy
       inst.frustumCulled = false;
       root.add(inst);
     });

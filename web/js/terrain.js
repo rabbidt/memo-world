@@ -19,7 +19,11 @@ export function baseHeightAt(x, z) {
   h += (Math.sin(x * 0.085 + 0.6) * Math.cos(z * 0.075 - 1.1) * 0.95 + Math.sin(x * 0.05 - z * 0.06 + 2) * 0.5) * inland; // rolling ground
   h = Math.max(h, 0.62 * inland - 2.2 * smooth(31, 44, r)); // no dips below the sea inland
   for (const s of shaping) h += s.lift * gauss(x, z, s, s.radius);
-  if (fall) h -= fall.depth * gauss(x, z, fall.pool, 2.7) * smooth(-0.3, 0.3, (x - fall.lip.x) * fall.dx + (z - fall.lip.z) * fall.dz); // a sheer step for the waterfall
+  if (boost) h += boost.lift * gauss(x, z, boost, boost.radius);
+  if (fall) { // a flat-floored hollow with a sheer back wall, for the water to fall into
+    const d = Math.hypot(x - fall.pool.x, z - fall.pool.z), bowl = fall.model ? 1 - smooth(3.3 * fall.scale, 5.2 * fall.scale, d) : gauss(x, z, fall.pool, 2.7);
+    if (bowl > 0) h -= fall.depth * bowl * smooth(-0.3, 0.3, (x - fall.lip.x) * fall.dx + (z - fall.lip.z) * fall.dz);
+  } // a sheer step for the waterfall
   return h;
 }
 
@@ -27,15 +31,28 @@ export function baseHeightAt(x, z) {
 // A stream is a list of places to run through. It is sampled every half metre, given a bed that only
 // ever goes downhill, and that bed is cut into the ground, so it makes its own little valley through
 // any rise. Where the route passes the waterfall the ground drops in a step and the water falls.
-let stream = null, fall = null, bridges = [], season = null;
+let stream = null, fall = null, boost = null, bridges = [], season = null;
 export function setSeason(s) { season = s; }
 export function setStream(route, { width = 1.2, waterfall = null, endLevel = -Infinity, bridgeSpots = [] } = {}) {
-  stream = null; fall = null; bridges = bridgeSpots; pathCache = null;
+  stream = null; fall = null; boost = null; bridges = bridgeSpots; pathCache = null;
   if (!route || route.length < 2) return;
   if (waterfall) {
     const k = route.findIndex((q) => q.x === waterfall.x && q.z === waterfall.z), prev = route[Math.max(0, k - 1)];
     const len = Math.hypot(waterfall.x - prev.x, waterfall.z - prev.z) || 1, dx = (waterfall.x - prev.x) / len, dz = (waterfall.z - prev.z) / len;
-    fall = { pool: waterfall, depth: 2.3, dx, dz, lip: { x: waterfall.x - dx * 1.9, z: waterfall.z - dz * 1.9 } };
+    let depth = waterfall.depth ?? 2.3, back = waterfall.back ?? 1.9, scale = 1;
+    boost = null;
+    if (waterfall.model) { // the model is a 3.5 m cliff: raise the hill behind it enough for a full drop, and dig the pool in
+      const top = waterfall.summit || prev, g = (x, z) => gauss(x, z, top, 7.5), lx = waterfall.x - dx * 3.2, lz = waterfall.z - dz * 3.2;
+      const short = 3.5 - 2.0 - (baseHeightAt(lx, lz) - baseHeightAt(waterfall.x, waterfall.z));
+      const low = (4.15 - baseHeightAt(lx, lz)) / Math.max(0.2, g(lx, lz)); // the lip must also stand a full drop above the pool floor, which cannot go below the sea
+      boost = { x: top.x, z: top.z, radius: 7.5, lift: Math.min(5, Math.max(0, low, short / Math.max(0.08, g(lx, lz) - g(waterfall.x, waterfall.z)))) };
+      const poolBase = baseHeightAt(waterfall.x, waterfall.z);
+      for (let i = 0; i < 3; i++) {
+        const lipBase = baseHeightAt(waterfall.x - dx * back, waterfall.z - dz * back), floor = Math.max(0.5, lipBase - 3.5);
+        scale = Math.min(1, Math.max(0.35, (lipBase - floor) / 3.5)); back = 3.2 * scale; depth = Math.max(0, poolBase - floor);
+      }
+    }
+    fall = { pool: waterfall, depth, dx, dz, scale, model: Boolean(waterfall.model), lip: { x: waterfall.x - dx * back, z: waterfall.z - dz * back } };
   }
   const pts = [], P = (i) => route[Math.min(route.length - 1, Math.max(0, i))];
   let dist = 0;
@@ -64,6 +81,15 @@ function nearestOnStream(x, z) {
   for (const q of stream.pts) { const d = (x - q.x) ** 2 + (z - q.z) ** 2; if (d < bd) { bd = d; best = q; } }
   return best && { q: best, d: Math.sqrt(bd) };
 }
+// Which way the water runs at a spot (a unit vector), and at the waterfall; null with no stream.
+export function streamDirection(x, z) {
+  if (!stream) return null;
+  let k = 0, bd = Infinity;
+  stream.pts.forEach((q, i) => { const d = (x - q.x) ** 2 + (z - q.z) ** 2; if (d < bd) { bd = d; k = i; } });
+  const a = stream.pts[Math.max(0, k - 2)], b = stream.pts[Math.min(stream.pts.length - 1, k + 2)], len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+  return { x: (b.x - a.x) / len, z: (b.z - a.z) / len };
+}
+export const fallDirection = () => fall && { x: fall.dx, z: fall.dz, scale: fall.scale };
 // How far a spot is from the water's middle (Infinity when there is no stream nearby).
 export const streamDistance = (x, z) => nearestOnStream(x, z)?.d ?? Infinity;
 
@@ -76,7 +102,7 @@ export function heightAt(x, z) {
 }
 // Where feet go: the ground, except on a bridge, where it is the deck.
 export function walkHeightAt(x, z) {
-  for (const b of bridges) { const d = Math.hypot(x - b.x, z - b.z); if (d < 2.6) return Math.max(heightAt(x, z), baseHeightAt(b.x, b.z) + 0.32 + 0.22 * Math.cos((d / 2.6) * Math.PI / 2)); }
+  for (const b of bridges) { const d = Math.hypot(x - b.x, z - b.z); if (d < 2.6) return Math.max(heightAt(x, z), baseHeightAt(b.x, b.z) + (b.rise ?? 0.54) * Math.cos((d / 2.6) * Math.PI / 2)); }
   return heightAt(x, z);
 }
 
@@ -89,7 +115,7 @@ export function buildStream() {
     const y = q.bed + 0.17, drop = Math.min(1, Math.max(0, (a.bed - b.bed) / (len * 0.9) - 0.15));
     pos.set([q.x + nx * width * 0.56, y, q.z + nz * width * 0.56, q.x - nx * width * 0.56, y, q.z - nz * width * 0.56], i * 6);
     uvs.set([0, q.s, 1, q.s], i * 4); white.set([drop, drop], i * 2);
-    if (i < n - 1) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+    if (i < n - 1 && !(fall?.model && Math.min(Math.hypot(q.x - fall.pool.x, q.z - fall.pool.z), Math.hypot(pts[i + 1].x - fall.pool.x, pts[i + 1].z - fall.pool.z)) < 3.1 * fall.scale)) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
   });
   for (let pass = 0; pass < 2; pass++) for (let i = n - 2; i > 0; i--) { const v = Math.max(white[i * 2], white[(i - 1) * 2] * 0.75, white[(i + 1) * 2] * 0.5); white[i * 2] = white[i * 2 + 1] = v; } // foam carries on below a drop
   const geo = new THREE.BufferGeometry();
